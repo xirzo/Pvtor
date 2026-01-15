@@ -12,9 +12,9 @@ public class NoteServiceTests
     public void Create_ValidRequest_ReturnsNote()
     {
         // Arrange
-        IPersistanceContext persitenceContext = Substitute.For<IPersistanceContext>();
+        IPersistanceContext persistenceContext = Substitute.For<IPersistanceContext>();
         INoteRepository noteRepository = Substitute.For<INoteRepository>();
-        persitenceContext.NoteRepository.Returns(noteRepository);
+        persistenceContext.NoteRepository.Returns(noteRepository);
 
         noteRepository.Add(Arg.Any<Note>())
             .Returns(info =>
@@ -23,7 +23,7 @@ public class NoteServiceTests
                 return addedNode;
             });
 
-        var noteService = new NoteService(persitenceContext);
+        var noteService = new NoteService(persistenceContext);
         const string content = "Pvtor";
 
         // Act
