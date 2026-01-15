@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="../../Application/Pvtor.Application.Contracts/Pvtor.Application.Contracts.csproj"/>
+    </ItemGroup>
+
+</Project>
