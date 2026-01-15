@@ -22,6 +22,7 @@
     </Folder>
     <Folder Name="/src/Presentation/">
         <Project Path="src/Presentation/Pvtor.Presentation.Http/Pvtor.Presentation.Http.csproj" />
+        <Project Path="src/Presentation/Pvtor.Presentation.TelegramBot/Pvtor.Presentation.TelegramBot.csproj" />
     </Folder>
     <Folder Name="/tests/">
         <Project Path="tests/Pvtor.Application.Tests/Pvtor.Application.Tests.csproj" />

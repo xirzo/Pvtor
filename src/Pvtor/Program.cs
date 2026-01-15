@@ -1,6 +1,7 @@
 ﻿using Pvtor.Application;
 using Pvtor.Infrastructure.Sqlite;
 using Pvtor.Presentation.Http;
+using Pvtor.Presentation.TelegramBot;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ builder.Services
     .AddApplication()
     .AddSqlite(connectionString)
     .AddHttp()
+    .AddTelegramBot()
     .AddOpenApi();
 
 WebApplication app = builder.Build();
@@ -28,4 +30,4 @@ if (app.Environment.IsDevelopment())
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

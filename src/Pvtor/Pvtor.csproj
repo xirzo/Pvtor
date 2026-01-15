@@ -8,6 +8,7 @@
     <ItemGroup>
         <ProjectReference Include="../Infrastructure/Pvtor.Infrastructure.Sqlite/Pvtor.Infrastructure.Sqlite.csproj"/>
         <ProjectReference Include="../Presentation/Pvtor.Presentation.Http/Pvtor.Presentation.Http.csproj"/>
+        <ProjectReference Include="../Presentation/Pvtor.Presentation.TelegramBot/Pvtor.Presentation.TelegramBot.csproj"/>
         <ProjectReference Include="../Application/Pvtor.Application/Pvtor.Application.csproj"/>
     </ItemGroup>
 
