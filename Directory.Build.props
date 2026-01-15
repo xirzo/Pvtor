@@ -23,6 +23,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="$(AssemblyName).Tests"/>
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="SourceKit.Analyzers.Collections"/>
         <PackageReference Include="SourceKit.Analyzers.Enumerable"/>
         <PackageReference Include="SourceKit.Analyzers.MemberAccessibility"/>

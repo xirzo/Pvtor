@@ -23,4 +23,7 @@
     <Folder Name="/src/Presentation/">
         <Project Path="src/Presentation/Pvtor.Presentation.Http/Pvtor.Presentation.Http.csproj" />
     </Folder>
+    <Folder Name="/tests/">
+        <Project Path="tests/Pvtor.Application.Tests/Pvtor.Application.Tests.csproj" />
+    </Folder>
 </Solution>
