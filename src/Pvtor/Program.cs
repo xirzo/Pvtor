@@ -5,9 +5,16 @@ using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (connectionString is null || string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new ArgumentNullException(nameof(connectionString), "Provide database connection string");
+}
+
 builder.Services
     .AddApplication()
-    .AddSqlite()
+    .AddSqlite(connectionString)
     .AddHttp()
     .AddOpenApi();
 

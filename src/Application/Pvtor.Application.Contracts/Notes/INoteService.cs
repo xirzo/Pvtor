@@ -1,8 +1,10 @@
 ﻿using Pvtor.Application.Contracts.Notes.Operations;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pvtor.Application.Contracts.Notes;
 
 public interface INoteService
 {
-    CreateNote.Response CreateNote(CreateNote.Request request);
+    Task<CreateNote.Response> CreateNoteAsync(CreateNote.Request request, CancellationToken cancellationToken = default);
 }

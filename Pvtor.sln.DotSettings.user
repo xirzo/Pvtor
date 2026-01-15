@@ -1,0 +1,11 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=521bcace_002D7999_002D48ee_002D9f7d_002Da5531f9b170a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="Create_ValidRequest_ReturnsNote" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::1B494F5F-AE16-BAD0-08EF-022AAEF562DB::net10.0::Pvtor.Domain.Tests.NoteServiceTests.CreateAsync_ValidRequest_ReturnsNote&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=7d05511e_002D30c4_002D4db1_002D8b78_002D770c180aaea9/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="Create_ValidRequest_ReturnsNote #2" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::1B494F5F-AE16-BAD0-08EF-022AAEF562DB::net10.0::Pvtor.Domain.Tests.NoteServiceTests.Create_ValidRequest_ReturnsNote&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

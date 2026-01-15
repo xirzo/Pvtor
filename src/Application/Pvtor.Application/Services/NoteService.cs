@@ -4,6 +4,8 @@ using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pvtor.Application.Services;
 
@@ -16,11 +18,11 @@ internal sealed class NoteService : INoteService
         _context = context;
     }
 
-    public CreateNote.Response CreateNote(CreateNote.Request request)
+    public async Task<CreateNote.Response> CreateNoteAsync(CreateNote.Request request, CancellationToken cancellationToken = default)
     {
         try
         {
-            Note note = _context.NoteRepository.Add(new Note(NoteId.Default, request.Content, DateTime.UtcNow));
+            Note note = await _context.NoteRepository.AddAsync(new Note(NoteId.Default, request.Content, DateTime.UtcNow), cancellationToken);
             return new CreateNote.Response.Success(note.MapToDto());
         }
         catch (Exception ex)

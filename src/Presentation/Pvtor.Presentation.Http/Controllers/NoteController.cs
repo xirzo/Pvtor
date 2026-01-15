@@ -4,6 +4,8 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Presentation.Http.Models;
 using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pvtor.Presentation.Http.Controllers;
 
@@ -19,12 +21,15 @@ public class NoteController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<NoteDto> CreateNote([FromBody] CreateNoteRequest httpRequest)
+    public async Task<ActionResult<NoteDto>> CreateNoteAsync(
+        [FromBody] CreateNoteRequest httpRequest,
+        CancellationToken cancellationToken = default)
     {
         var request = new CreateNote.Request(httpRequest.Content);
-        CreateNote.Response response = _noteService.CreateNote(request);
+        CreateNote.Response response = await _noteService.CreateNoteAsync(request, cancellationToken);
 
-        return response switch {
+        return response switch
+        {
             CreateNote.Response.PersistenceFailure persistenceFailure => BadRequest(persistenceFailure.Message),
             CreateNote.Response.Success success => Ok(success.Note),
             _ => throw new UnreachableException(),

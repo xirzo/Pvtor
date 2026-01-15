@@ -7,10 +7,12 @@ namespace Pvtor.Infrastructure.Sqlite;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddSqlite(this IServiceCollection services)
+    public static IServiceCollection AddSqlite(this IServiceCollection services, string connectionString)
     {
         services.AddSingleton<IPersistanceContext, SqlitePersistenceContext>();
-        services.AddSingleton<INoteRepository, SqliteNoteRepository>();
+
+        services.AddSingleton<INoteRepository>(_ =>
+            new SqliteNoteRepository(connectionString));
         return services;
     }
 }

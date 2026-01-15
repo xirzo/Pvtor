@@ -3,20 +3,21 @@ using Pvtor.Application.Abstractions.Persistence.Repositories;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Services;
 using Pvtor.Domain.Notes;
+using System.Threading.Tasks;
 
 namespace Pvtor.Domain.Tests;
 
 public class NoteServiceTests
 {
     [Fact]
-    public void Create_ValidRequest_ReturnsNote()
+    public async Task CreateAsync_ValidRequest_ReturnsNote()
     {
         // Arrange
         IPersistanceContext persistenceContext = Substitute.For<IPersistanceContext>();
         INoteRepository noteRepository = Substitute.For<INoteRepository>();
         persistenceContext.NoteRepository.Returns(noteRepository);
 
-        noteRepository.Add(Arg.Any<Note>())
+        noteRepository.AddAsync(Arg.Any<Note>())
             .Returns(info =>
             {
                 Note addedNode = info.Arg<Note>();
@@ -27,7 +28,7 @@ public class NoteServiceTests
         const string content = "Pvtor";
 
         // Act
-        CreateNote.Response response = noteService.CreateNote(new CreateNote.Request(content));
+        CreateNote.Response response = await noteService.CreateNoteAsync(new CreateNote.Request(content));
 
         // Assert
         Assert.IsType<CreateNote.Response.Success>(response);
