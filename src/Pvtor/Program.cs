@@ -17,7 +17,7 @@ builder.Services
     .AddApplication()
     .AddSqlite(connectionString)
     .AddHttp()
-    .AddTelegramBot()
+    .AddTelegramBot(builder.Configuration)
     .AddOpenApi();
 
 WebApplication app = builder.Build();

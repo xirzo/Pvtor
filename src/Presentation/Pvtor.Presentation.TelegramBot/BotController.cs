@@ -12,9 +12,9 @@ namespace Pvtor.Presentation.TelegramBot;
 [Route("api/telegram")]
 public class BotController : ControllerBase
 {
-    private readonly IOptions<BotConfiguration> _config;
+    private readonly IOptions<BotOptions> _config;
 
-    public BotController(IOptions<BotConfiguration> config)
+    public BotController(IOptions<BotOptions> config)
     {
         _config = config;
     }

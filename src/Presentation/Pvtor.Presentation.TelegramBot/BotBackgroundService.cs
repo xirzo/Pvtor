@@ -12,12 +12,12 @@ public class BotBackgroundService : BackgroundService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly ILogger<BotBackgroundService> _logger;
-    private readonly IOptions<BotConfiguration> _config;
+    private readonly IOptions<BotOptions> _config;
 
     public BotBackgroundService(
         ITelegramBotClient botClient,
         ILogger<BotBackgroundService> logger,
-        IOptions<BotConfiguration> config)
+        IOptions<BotOptions> config)
     {
         _botClient = botClient;
         _logger = logger;
