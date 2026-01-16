@@ -4,6 +4,8 @@ using Pvtor.Application.Abstractions.Persistence.Repositories;
 using Pvtor.Domain.Notes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,8 +42,41 @@ internal sealed class SqliteNoteRepository : INoteRepository
         return new Note(new NoteId(noteId), note.Content, note.CreationDate);
     }
 
-    public IEnumerable<Note> Query(NoteQuery query)
+    public async Task<IEnumerable<Note>> Query(NoteQuery query, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        var parameters = new List<SqliteParameter>();
+        var commandText = new StringBuilder("SELECT note_id, content, creation_date FROM notes");
+
+        if (query.Ids.Length > 0)
+        {
+            string placeholders = string.Join(",", query.Ids.Select((_, i) => $"@id{i}"));
+            commandText.Append($" WHERE note_id IN ({placeholders})");
+
+            parameters.AddRange(query.Ids.Select((noteId, i) => new SqliteParameter($"@id{i}", noteId)));
+        }
+
+        await using SqliteCommand command = connection.CreateCommand();
+#pragma warning disable CA2100
+        command.CommandText = commandText.ToString();
+#pragma warning restore CA2100
+        command.Parameters.AddRange(parameters);
+
+        var notes = new List<Note>();
+        await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            notes.Add(MapNoteFromReader(reader));
+        }
+
+        return notes;
+    }
+
+    private Note MapNoteFromReader(SqliteDataReader reader)
+    {
+        return new Note(new NoteId(reader.GetInt64(0)), reader.GetString(1), reader.GetDateTime(2));
     }
 }

@@ -10,5 +10,5 @@ public interface INoteRepository
 {
     Task<Note> AddAsync(Note note, CancellationToken cancellationToken = default);
 
-    IEnumerable<Note> Query(NoteQuery query);
+    Task<IEnumerable<Note>> Query(NoteQuery query, CancellationToken cancellationToken = default);
 }
