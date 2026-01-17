@@ -13,6 +13,8 @@ namespace Pvtor.Presentation.TelegramBot;
 
 public class BotUpdateHandler : IUpdateHandler
 {
+    private const string RequestSource = "Telegram";
+
     private readonly ITelegramBotClient _bot;
     private readonly ILogger<BotUpdateHandler> _logger;
     private readonly INoteService _noteService;
@@ -62,7 +64,7 @@ public class BotUpdateHandler : IUpdateHandler
         }
 
         CreateNote.Response createNoteResponse =
-            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText), cancellationToken);
+            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText, RequestSource), cancellationToken);
 
         switch (createNoteResponse)
         {
@@ -87,8 +89,9 @@ public class BotUpdateHandler : IUpdateHandler
             return;
         }
 
+        // TODO: add update
         CreateNote.Response createNoteResponse =
-            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText), cancellationToken);
+            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText, RequestSource), cancellationToken);
 
         switch (createNoteResponse)
         {

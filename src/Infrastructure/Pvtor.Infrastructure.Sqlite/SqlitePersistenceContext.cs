@@ -5,10 +5,15 @@ namespace Pvtor.Infrastructure.Sqlite;
 
 internal sealed class SqlitePersistenceContext : IPersistanceContext
 {
-    public SqlitePersistenceContext(INoteRepository noteRepository)
+    public SqlitePersistenceContext(
+        INoteCorrelationRepository noteCorrelationRepository,
+        INoteRepository noteRepository)
     {
+        NoteCorrelationRepository = noteCorrelationRepository;
         NoteRepository = noteRepository;
     }
+
+    public INoteCorrelationRepository NoteCorrelationRepository { get; }
 
     public INoteRepository NoteRepository { get; }
 }

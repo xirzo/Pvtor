@@ -13,6 +13,8 @@ namespace Pvtor.Presentation.Http.Controllers;
 [Route("api/notes")]
 public class NoteController : ControllerBase
 {
+    private const string RequestSource = "REST";
+
     private readonly INoteService _noteService;
 
     public NoteController(INoteService noteService)
@@ -25,7 +27,7 @@ public class NoteController : ControllerBase
         [FromBody] CreateNoteRequest httpRequest,
         CancellationToken cancellationToken = default)
     {
-        var request = new CreateNote.Request(httpRequest.Content);
+        var request = new CreateNote.Request(httpRequest.Content, RequestSource);
         CreateNote.Response response = await _noteService.CreateNoteAsync(request, cancellationToken);
 
         return response switch

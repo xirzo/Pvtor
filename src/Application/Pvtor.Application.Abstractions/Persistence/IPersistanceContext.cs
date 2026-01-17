@@ -4,5 +4,7 @@ namespace Pvtor.Application.Abstractions.Persistence;
 
 public interface IPersistanceContext
 {
-    INoteRepository NoteRepository { get;  }
+    INoteCorrelationRepository NoteCorrelationRepository { get; }
+
+    INoteRepository NoteRepository { get; }
 }
