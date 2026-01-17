@@ -53,6 +53,8 @@ public class BotUpdateHandler : IUpdateHandler
         cancellationToken.ThrowIfCancellationRequested();
         await (update switch
         {
+            { ChannelPost: { } message } => OnMessage(message, cancellationToken),
+            { EditedChannelPost: { } message } => OnMessageEdited(message, cancellationToken),
             { Message: { } message } => OnMessage(message, cancellationToken),
             { EditedMessage: { } message } => OnMessageEdited(message, cancellationToken),
             _ => UnknownUpdateHandlerAsync(update),
