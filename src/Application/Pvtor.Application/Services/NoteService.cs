@@ -31,7 +31,10 @@ internal sealed class NoteService : INoteService
                 new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow),
                 cancellationToken);
 
-            _correlationRecorder.RecordCorrelation(note.NoteId, new NoteSourceId(request.Source));
+            await _correlationRecorder.RecordCorrelationAsync(
+                note.NoteId,
+                new NoteSourceId(request.Source),
+                cancellationToken);
 
             return new CreateNote.Response.Success(note.MapToDto());
         }

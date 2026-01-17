@@ -1,4 +1,5 @@
-﻿using Pvtor.Application.Abstractions.Persistence.Queries;
+﻿using Microsoft.Data.Sqlite;
+using Pvtor.Application.Abstractions.Persistence.Queries;
 using Pvtor.Application.Abstractions.Persistence.Repositories;
 using Pvtor.Domain.Notes;
 using System.Collections.Generic;
@@ -16,11 +17,26 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
         _connectionString = connectionString;
     }
 
-    public Task<NoteCorrelation> AddAsync(
+    public async Task AddAsync(
         NoteCorrelation noteCorrelation,
         CancellationToken cancellationToken = default)
     {
-        throw new System.NotImplementedException();
+        await using var connection = new SqliteConnection(_connectionString);
+
+        await connection.OpenAsync(cancellationToken);
+
+        await using SqliteCommand command = connection.CreateCommand();
+
+        command.CommandText = """
+                                INSERT INTO note_correlations (note_id, note_source_id, creation_date) 
+                                VALUES ($note_id,  $note_source_id, $creation_date);
+                              """;
+
+        command.Parameters.AddWithValue("$note_id", noteCorrelation.NoteCorrelationId.NoteId.Value);
+        command.Parameters.AddWithValue("$note_source_id", noteCorrelation.NoteCorrelationId.NoteSourceId.Value);
+        command.Parameters.AddWithValue("$creation_date", noteCorrelation.CreationDate);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public Task<IEnumerable<NoteCorrelation>> Query(

@@ -8,7 +8,7 @@ namespace Pvtor.Application.Abstractions.Persistence.Repositories;
 
 public interface INoteCorrelationRepository
 {
-    Task<NoteCorrelation> AddAsync(NoteCorrelation noteCorrelation, CancellationToken cancellationToken = default);
+    Task AddAsync(NoteCorrelation noteCorrelation, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<NoteCorrelation>> Query(NoteCorrelationQuery query, CancellationToken cancellationToken = default);
 }

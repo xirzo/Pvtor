@@ -1,8 +1,10 @@
 ﻿using Pvtor.Domain.Notes;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Pvtor.Application.Abstractions;
 
 public interface INoteCorrelationRecorder
 {
-    void RecordCorrelation(NoteId noteId, NoteSourceId noteSourceId);
+    Task RecordCorrelationAsync(NoteId noteId, NoteSourceId noteSourceId, CancellationToken cancellationToken = default);
 }
