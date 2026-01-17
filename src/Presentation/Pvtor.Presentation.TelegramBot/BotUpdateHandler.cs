@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using Pvtor.Application.Contracts.Notes;
+using Pvtor.Application.Contracts.Notes.Operations;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,8 +8,6 @@ using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Pvtor.Presentation.TelegramBot;
 
@@ -15,11 +15,13 @@ public class BotUpdateHandler : IUpdateHandler
 {
     private readonly ITelegramBotClient _bot;
     private readonly ILogger<BotUpdateHandler> _logger;
+    private readonly INoteService _noteService;
 
-    public BotUpdateHandler(ITelegramBotClient bot, ILogger<BotUpdateHandler> logger)
+    public BotUpdateHandler(ITelegramBotClient bot, ILogger<BotUpdateHandler> logger, INoteService noteService)
     {
         _bot = bot;
         _logger = logger;
+        _noteService = noteService;
     }
 
     public async Task HandleErrorAsync(
@@ -44,46 +46,36 @@ public class BotUpdateHandler : IUpdateHandler
         cancellationToken.ThrowIfCancellationRequested();
         await (update switch
         {
-            { Message: { } message } => OnMessage(message),
-            { EditedMessage: { } message } => OnMessage(message),
+            { Message: { } message } => OnMessage(message, cancellationToken),
+            { EditedMessage: { } message } => OnMessage(message, cancellationToken),
             _ => UnknownUpdateHandlerAsync(update),
         });
     }
 
-    private async Task OnMessage(Message msg)
+    private async Task OnMessage(Message msg, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Receive message type: {MessageType}", msg.Type);
         if (msg.Text is not { } messageText)
         {
+            _logger.LogInformation("Message text is null, skipping...");
             return;
         }
 
-        Message sentMessage = await (messageText.Split(' ')[0] switch
-        {
-            _ => Usage(msg),
-        });
-        _logger.LogInformation("The message was sent with id: {SentMessageId}", sentMessage.Id);
-    }
+        CreateNote.Response createNoteResponse =
+            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText), cancellationToken);
 
-    private async Task<Message> Usage(Message msg)
-    {
-        const string usage = """
-                                 <b><u>Bot menu</u></b>:
-                                 /photo          - send a photo
-                                 /inline_buttons - send inline buttons
-                                 /keyboard       - send keyboard buttons
-                                 /remove         - remove keyboard buttons
-                                 /request        - request location or contact
-                                 /inline_mode    - send inline-mode results list
-                                 /poll           - send a poll
-                                 /poll_anonymous - send an anonymous poll
-                                 /throw          - what happens if handler fails
-                             """;
-        return await _bot.SendMessage(
-            msg.Chat,
-            usage,
-            parseMode: ParseMode.Html,
-            replyMarkup: new ReplyKeyboardRemove());
+        switch (createNoteResponse)
+        {
+            case CreateNote.Response.PersistenceFailure persistenceFailure:
+                _logger.LogInformation(
+                    $"Failed to save message with id: {msg.Id}, persistence failure: {persistenceFailure.Message}");
+                break;
+            case CreateNote.Response.Success success:
+                _logger.LogInformation($"Saved message with id: {msg.Id} as note with id: {success.Note.NoteId}");
+                break;
+        }
+
+        await _bot.SendMessage(msg.Chat, "DEBUG: Saved message", cancellationToken: cancellationToken);
     }
 
     private Task UnknownUpdateHandlerAsync(Update update)

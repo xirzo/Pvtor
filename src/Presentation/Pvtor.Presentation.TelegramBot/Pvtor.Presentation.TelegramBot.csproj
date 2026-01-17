@@ -8,4 +8,8 @@
         <PackageReference Include="Telegram.Bot"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\Application\Pvtor.Application.Contracts\Pvtor.Application.Contracts.csproj" />
+    </ItemGroup>
+
 </Project>
