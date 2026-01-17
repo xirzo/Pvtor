@@ -56,7 +56,7 @@ internal sealed class SqliteNoteRepository : INoteRepository
             string placeholders = string.Join(",", query.Ids.Select((_, i) => $"@id{i}"));
             commandText.Append($" WHERE note_id IN ({placeholders})");
 
-            parameters.AddRange(query.Ids.Select((noteId, i) => new SqliteParameter($"@id{i}", noteId)));
+            parameters.AddRange(query.Ids.Select((noteId, i) => new SqliteParameter($"@id{i}", noteId.Value)));
         }
 
         await using SqliteCommand command = connection.CreateCommand();
