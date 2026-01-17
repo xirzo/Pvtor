@@ -16,8 +16,10 @@ jobs:
       DB_CONNECTION_STRING: ${{ secrets.DB_CONNECTION_STRING }}
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - name: Checkout 
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -35,12 +37,16 @@ jobs:
           --runtime linux-x64 \
           --self-contained false
 
+          echo "Published Files:"
+          ls -la ${{ env.PUBLISH_OUTPUT_DIR }}
+
     - name: Deploy via SFTP
-      uses: Dylan700/sftp-upload-action@latest
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:
         server: ${{ secrets.SFTP_SERVER }}
         username: ${{ secrets.SFTP_USERNAME }}
         password: ${{ secrets.SFTP_PASSWORD }}
-        port: 22
-        uploads: |
-          ${{ env.PUBLISH_OUTPUT_DIR }}/ => /app/publish
+        port: "22"
+        local_path: ${{ env.PUBLISH_OUTPUT_DIR }}/*
+        remote_path: /app/publish/
+        sftp_only: true
