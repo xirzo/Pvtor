@@ -2,6 +2,7 @@
 using Pvtor.Application.Abstractions.Persistence.Queries;
 using Pvtor.Application.Contracts.Notes;
 using Pvtor.Application.Contracts.Notes.Models;
+using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
 using System;
@@ -20,17 +21,24 @@ public class NoteCorrelationService : INoteCorrelationService
         _context = context;
     }
 
-    public async Task RecordCorrelationAsync(
-        long noteId,
-        string noteSourceId,
+    public async Task<RecordCorrelation.Response> RecordCorrelationAsync(
+        RecordCorrelation.Request request,
         CancellationToken cancellationToken = default)
     {
         var noteCorrelation =
             new NoteCorrelation(
-                new NoteCorrelationId(new NoteSourceId(noteSourceId), new NoteId(noteId)),
+                new NoteCorrelationId(new NoteSourceId(request.NoteSourceId), new NoteId(request.NoteId)),
                 DateTime.UtcNow);
 
-        await _context.NoteCorrelationRepository.AddAsync(noteCorrelation, cancellationToken);
+        try
+        {
+            await _context.NoteCorrelationRepository.AddAsync(noteCorrelation, cancellationToken);
+            return new RecordCorrelation.Response.Success();
+        }
+        catch (Exception ex)
+        {
+            return new RecordCorrelation.Response.PersistenceFailure(ex.Message);
+        }
     }
 
     public async Task<NoteCorrelationDto?> FindBySourceIdAsync(string noteSourceId)

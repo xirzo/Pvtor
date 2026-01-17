@@ -76,11 +76,30 @@ public class BotUpdateHandler : IUpdateHandler
         switch (createNoteResponse)
         {
             case CreateNote.Response.PersistenceFailure persistenceFailure:
-                _logger.LogInformation(
+                _logger.LogError(
                     $"Failed to save message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
                 break;
-            case CreateNote.Response.Success success:
-                _logger.LogInformation($"Saved message with id: {message.Id} as note with id: {success.Note.NoteId}");
+            case CreateNote.Response.Success createSuccess:
+                _logger.LogInformation(
+                    $"Saved message with id: {message.Id} as note with id: {createSuccess.Note.NoteId}");
+
+                RecordCorrelation.Response recordResponse =
+                    await _correlationService.RecordCorrelationAsync(
+                        new RecordCorrelation.Request(createSuccess.Note.NoteId, message.Id.ToString()),
+                        cancellationToken);
+
+                switch (recordResponse)
+                {
+                    case RecordCorrelation.Response.PersistenceFailure recordPersistenceFailure:
+                        _logger.LogError(
+                            $"Failed to record correlation for message with id: {message.Id}, persistence failure: {recordPersistenceFailure.Message}");
+                        break;
+                    case RecordCorrelation.Response.Success:
+                        _logger.LogInformation(
+                            $"Saved correlation for message with id: {message.Id} (note with id: {createSuccess.Note.NoteId})");
+                        break;
+                }
+
                 break;
         }
 
