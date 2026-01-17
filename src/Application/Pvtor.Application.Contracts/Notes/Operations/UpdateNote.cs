@@ -13,5 +13,7 @@ public static class UpdateNote
         public sealed record Success(NoteDto Note) : Response;
 
         public sealed record PersistenceFailure(string Message) : Response;
+
+        public sealed record NotFound(string Message) : Response;
     }
 }

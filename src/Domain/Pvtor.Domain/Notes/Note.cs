@@ -14,7 +14,7 @@ public sealed record Note
 
     public NoteId NoteId { get; }
 
-    public string Content { get; }
+    public string Content { get; init; }
 
     public DateTime CreationDate { get; }
 

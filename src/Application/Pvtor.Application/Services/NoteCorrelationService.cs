@@ -35,7 +35,8 @@ public class NoteCorrelationService : INoteCorrelationService
 
     public async Task<NoteCorrelationDto?> FindBySourceIdAsync(string noteSourceId)
     {
-        var query = NoteCorrelationQuery.Build(builder => builder.WithSourceId(new NoteSourceId(noteSourceId)));
+        var query =
+            NoteCorrelationQuery.Build(builder => builder.WithNoteSourceId(new NoteSourceId(noteSourceId)));
 
         NoteCorrelation? noteCorrelation = (await _context.NoteCorrelationRepository
                 .QueryAsync(query))
