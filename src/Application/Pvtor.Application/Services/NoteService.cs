@@ -18,11 +18,15 @@ internal sealed class NoteService : INoteService
         _context = context;
     }
 
-    public async Task<CreateNote.Response> CreateNoteAsync(CreateNote.Request request, CancellationToken cancellationToken = default)
+    public async Task<CreateNote.Response> CreateNoteAsync(
+        CreateNote.Request request,
+        CancellationToken cancellationToken = default)
     {
         try
         {
-            Note note = await _context.NoteRepository.AddAsync(new Note(NoteId.Default, request.Content, DateTime.UtcNow), cancellationToken);
+            Note note = await _context.NoteRepository.AddAsync(
+                new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow),
+                cancellationToken);
             return new CreateNote.Response.Success(note.MapToDto());
         }
         catch (Exception ex)

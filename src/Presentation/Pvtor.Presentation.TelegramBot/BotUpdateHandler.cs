@@ -47,15 +47,15 @@ public class BotUpdateHandler : IUpdateHandler
         await (update switch
         {
             { Message: { } message } => OnMessage(message, cancellationToken),
-            { EditedMessage: { } message } => OnMessage(message, cancellationToken),
+            { EditedMessage: { } message } => OnMessageEdited(message, cancellationToken),
             _ => UnknownUpdateHandlerAsync(update),
         });
     }
 
-    private async Task OnMessage(Message msg, CancellationToken cancellationToken)
+    private async Task OnMessage(Message message, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Receive message type: {MessageType}", msg.Type);
-        if (msg.Text is not { } messageText)
+        _logger.LogInformation("Receive message type: {MessageType}", message.Type);
+        if (message.Text is not { } messageText)
         {
             _logger.LogInformation("Message text is null, skipping...");
             return;
@@ -68,14 +68,40 @@ public class BotUpdateHandler : IUpdateHandler
         {
             case CreateNote.Response.PersistenceFailure persistenceFailure:
                 _logger.LogInformation(
-                    $"Failed to save message with id: {msg.Id}, persistence failure: {persistenceFailure.Message}");
+                    $"Failed to save message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
                 break;
             case CreateNote.Response.Success success:
-                _logger.LogInformation($"Saved message with id: {msg.Id} as note with id: {success.Note.NoteId}");
+                _logger.LogInformation($"Saved message with id: {message.Id} as note with id: {success.Note.NoteId}");
                 break;
         }
 
-        await _bot.SendMessage(msg.Chat, "DEBUG: Saved message", cancellationToken: cancellationToken);
+        await _bot.SendMessage(message.Chat, "DEBUG: Saved message", cancellationToken: cancellationToken);
+    }
+
+    private async Task OnMessageEdited(Message message, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Receive edited message, type: {MessageType}", message.Type);
+        if (message.Text is not { } messageText)
+        {
+            _logger.LogInformation("Message text is null, skipping...");
+            return;
+        }
+
+        CreateNote.Response createNoteResponse =
+            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText), cancellationToken);
+
+        switch (createNoteResponse)
+        {
+            case CreateNote.Response.PersistenceFailure persistenceFailure:
+                _logger.LogInformation(
+                    $"Failed to save message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
+                break;
+            case CreateNote.Response.Success success:
+                _logger.LogInformation($"Saved message with id: {message.Id} as note with id: {success.Note.NoteId}");
+                break;
+        }
+
+        await _bot.SendMessage(message.Chat, "DEBUG: Edited message", cancellationToken: cancellationToken);
     }
 
     private Task UnknownUpdateHandlerAsync(Update update)

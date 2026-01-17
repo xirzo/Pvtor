@@ -28,18 +28,19 @@ internal sealed class SqliteNoteRepository : INoteRepository
         await using SqliteCommand command = connection.CreateCommand();
 
         command.CommandText = """
-                              INSERT INTO notes (content, creation_date)
-                              VALUES ($content, $creation_date);
+                              INSERT INTO notes (content, creation_date, update_date)
+                              VALUES ($content, $creation_date, $update_date);
                               SELECT last_insert_rowid();
                               """;
 
         command.Parameters.AddWithValue("$content", note.Content);
         command.Parameters.AddWithValue("$creation_date", note.CreationDate);
+        command.Parameters.AddWithValue("$update_date", note.UpdateDate);
 
         long noteId = (long)(await command.ExecuteScalarAsync(cancellationToken)
                              ?? throw new InvalidOperationException("Failed to get note id from insertion"));
 
-        return new Note(new NoteId(noteId), note.Content, note.CreationDate);
+        return new Note(new NoteId(noteId), note.Content, note.CreationDate, note.UpdateDate);
     }
 
     public async Task<IEnumerable<Note>> Query(NoteQuery query, CancellationToken cancellationToken = default)
@@ -48,7 +49,7 @@ internal sealed class SqliteNoteRepository : INoteRepository
         await connection.OpenAsync(cancellationToken);
 
         var parameters = new List<SqliteParameter>();
-        var commandText = new StringBuilder("SELECT note_id, content, creation_date FROM notes");
+        var commandText = new StringBuilder("SELECT note_id, content, creation_date, update_date FROM notes");
 
         if (query.Ids.Length > 0)
         {
@@ -77,6 +78,6 @@ internal sealed class SqliteNoteRepository : INoteRepository
 
     private Note MapNoteFromReader(SqliteDataReader reader)
     {
-        return new Note(new NoteId(reader.GetInt64(0)), reader.GetString(1), reader.GetDateTime(2));
+        return new Note(new NoteId(reader.GetInt64(0)), reader.GetString(1), reader.GetDateTime(2), reader.GetDateTime(3));
     }
 }
