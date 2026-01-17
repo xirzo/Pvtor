@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.Sqlite;
+﻿using Npgsql;
 using Pvtor.Application.Abstractions.Persistence.Queries;
 using Pvtor.Application.Abstractions.Persistence.Repositories;
 using Pvtor.Domain.Notes;
@@ -8,13 +8,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Pvtor.Infrastructure.Sqlite.Repositories;
+namespace Pvtor.Infrastructure.Npgsql.Repositories;
 
-public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
+public class NpgsqlNoteCorrelationRepository : INoteCorrelationRepository
 {
     private readonly string _connectionString;
 
-    public SqliteNoteCorrelationRepository(string connectionString)
+    public NpgsqlNoteCorrelationRepository(string connectionString)
     {
         _connectionString = connectionString;
     }
@@ -23,20 +23,20 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
         NoteCorrelation noteCorrelation,
         CancellationToken cancellationToken = default)
     {
-        await using var connection = new SqliteConnection(_connectionString);
+        await using var connection = new NpgsqlConnection(_connectionString);
 
         await connection.OpenAsync(cancellationToken);
 
-        await using SqliteCommand command = connection.CreateCommand();
+        await using NpgsqlCommand command = connection.CreateCommand();
 
         command.CommandText = """
                                 INSERT INTO notes_correlations (note_id, note_source_id, creation_date) 
-                                VALUES ($note_id,  $note_source_id, $creation_date);
+                                VALUES (@note_id, @note_source_id, @creation_date);
                               """;
 
-        command.Parameters.AddWithValue("$note_id", noteCorrelation.NoteCorrelationId.NoteId.Value);
-        command.Parameters.AddWithValue("$note_source_id", noteCorrelation.NoteCorrelationId.NoteSourceId.Value);
-        command.Parameters.AddWithValue("$creation_date", noteCorrelation.CreationDate);
+        command.Parameters.AddWithValue("@note_id", noteCorrelation.NoteCorrelationId.NoteId.Value);
+        command.Parameters.AddWithValue("@note_source_id", noteCorrelation.NoteCorrelationId.NoteSourceId.Value);
+        command.Parameters.AddWithValue("@creation_date", noteCorrelation.CreationDate);
 
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
@@ -45,10 +45,10 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
         NoteCorrelationQuery query,
         CancellationToken cancellationToken = default)
     {
-        await using var connection = new SqliteConnection(_connectionString);
+        await using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
 
-        var parameters = new List<SqliteParameter>();
+        var parameters = new List<NpgsqlParameter>();
         var commandText = new StringBuilder("SELECT note_id, note_source_id, creation_date FROM notes_correlations");
         var whereConditions = new List<string>();
 
@@ -57,7 +57,7 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
             string noteIdPlaceholders = string.Join(",", query.NoteIds.Select((_, i) => $"@noteId{i}"));
             whereConditions.Add($"note_id IN ({noteIdPlaceholders})");
             parameters.AddRange(query.NoteIds.Select((noteId, i) =>
-                new SqliteParameter($"@noteId{i}", noteId.Value)));
+                new NpgsqlParameter($"@noteId{i}", noteId.Value)));
         }
 
         if (query.NoteSourceIds.Length > 0)
@@ -65,7 +65,7 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
             string sourceIdPlaceholders = string.Join(",", query.NoteSourceIds.Select((_, i) => $"@sourceId{i}"));
             whereConditions.Add($"note_source_id IN ({sourceIdPlaceholders})");
             parameters.AddRange(query.NoteSourceIds.Select((sourceId, i) =>
-                new SqliteParameter($"@sourceId{i}", sourceId.Value)));
+                new NpgsqlParameter($"@sourceId{i}", sourceId.Value)));
         }
 
         if (whereConditions.Count > 0)
@@ -74,14 +74,14 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
             commandText.Append(string.Join(" AND ", whereConditions));
         }
 
-        await using SqliteCommand command = connection.CreateCommand();
+        await using NpgsqlCommand command = connection.CreateCommand();
 #pragma warning disable CA2100
         command.CommandText = commandText.ToString();
 #pragma warning restore CA2100
-        command.Parameters.AddRange(parameters);
+        command.Parameters.AddRange(parameters.ToArray());
 
         var correlations = new List<NoteCorrelation>();
-        await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
 
         while (await reader.ReadAsync(cancellationToken))
         {
@@ -91,7 +91,7 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
         return correlations;
     }
 
-    private NoteCorrelation MapNoteCorrelationFromReader(SqliteDataReader reader)
+    private NoteCorrelation MapNoteCorrelationFromReader(NpgsqlDataReader reader)
     {
         return new NoteCorrelation(
             new NoteCorrelationId(

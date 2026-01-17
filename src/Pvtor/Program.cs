@@ -1,14 +1,13 @@
 ﻿using Pvtor.Application;
-using Pvtor.Infrastructure.Sqlite;
+using Pvtor.Infrastructure.Npgsql;
 using Pvtor.Presentation.Http;
 using Pvtor.Presentation.TelegramBot;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Configuration.AddJsonFile("appsettings.json", true)
-    .AddEnvironmentVariables();
-
+// builder.Configuration.AddJsonFile("appsettings.json", true)
+//     .AddEnvironmentVariables();
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (connectionString is null || string.IsNullOrWhiteSpace(connectionString))
@@ -18,7 +17,7 @@ if (connectionString is null || string.IsNullOrWhiteSpace(connectionString))
 
 builder.Services
     .AddApplication()
-    .AddSqlite(connectionString)
+    .AddNpgsql(connectionString)
     .AddHttp()
     .AddTelegramBot(builder.Configuration)
     .AddOpenApi();
