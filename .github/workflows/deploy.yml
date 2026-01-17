@@ -37,9 +37,6 @@ jobs:
           --runtime linux-x64 \
           --self-contained false
 
-          echo "Published Files:"
-          ls -la ${{ env.PUBLISH_OUTPUT_DIR }}
-
     - name: Deploy via SFTP
       uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:

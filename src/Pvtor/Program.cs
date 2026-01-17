@@ -6,8 +6,6 @@ using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// builder.Configuration.AddJsonFile("appsettings.json", true)
-//     .AddEnvironmentVariables();
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 if (connectionString is null || string.IsNullOrWhiteSpace(connectionString))
