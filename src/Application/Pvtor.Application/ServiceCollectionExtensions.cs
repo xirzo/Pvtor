@@ -9,6 +9,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddSingleton<INoteService, NoteService>();
+        services.AddSingleton<INoteCorrelationService, NoteCorrelationService>();
         return services;
     }
 }

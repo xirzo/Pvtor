@@ -1,6 +1,5 @@
 ﻿using Pvtor.Application;
 using Pvtor.Infrastructure.Sqlite;
-using Pvtor.Infrastructure.TelegramRecorder;
 using Pvtor.Presentation.Http;
 using Pvtor.Presentation.TelegramBot;
 using Scalar.AspNetCore;
@@ -19,7 +18,6 @@ builder.Services
     .AddSqlite(connectionString)
     .AddHttp()
     .AddTelegramBot(builder.Configuration)
-    .AddTelegramRecorder()
     .AddOpenApi();
 
 WebApplication app = builder.Build();

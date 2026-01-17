@@ -1,5 +1,4 @@
-﻿using Pvtor.Application.Abstractions;
-using Pvtor.Application.Abstractions.Persistence;
+﻿using Pvtor.Application.Abstractions.Persistence;
 using Pvtor.Application.Abstractions.Persistence.Repositories;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Services;
@@ -16,7 +15,6 @@ public class NoteServiceTests
         // Arrange
         IPersistanceContext persistenceContext = Substitute.For<IPersistanceContext>();
         INoteRepository noteRepository = Substitute.For<INoteRepository>();
-        INoteCorrelationRecorder noteCorrelationRecorder = Substitute.For<INoteCorrelationRecorder>();
         persistenceContext.NoteRepository.Returns(noteRepository);
 
         noteRepository.AddAsync(Arg.Any<Note>())
@@ -26,11 +24,11 @@ public class NoteServiceTests
                 return addedNode;
             });
 
-        var noteService = new NoteService(persistenceContext, noteCorrelationRecorder);
+        var noteService = new NoteService(persistenceContext);
         const string content = "Pvtor";
 
         // Act
-        CreateNote.Response response = await noteService.CreateNoteAsync(new CreateNote.Request(content, string.Empty));
+        CreateNote.Response response = await noteService.CreateNoteAsync(new CreateNote.Request(content));
 
         // Assert
         Assert.IsType<CreateNote.Response.Success>(response);

@@ -6,5 +6,11 @@ namespace Pvtor.Application.Contracts.Notes;
 
 public interface INoteService
 {
-    Task<CreateNote.Response> CreateNoteAsync(CreateNote.Request request, CancellationToken cancellationToken = default);
+    Task<CreateNote.Response> CreateNoteAsync(
+        CreateNote.Request request,
+        CancellationToken cancellationToken = default);
+
+    Task<UpdateNote.Response> UpdateNodeAsync(
+        UpdateNote.Request request,
+        CancellationToken cancellationToken = default);
 }

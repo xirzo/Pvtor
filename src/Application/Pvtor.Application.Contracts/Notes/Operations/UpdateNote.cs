@@ -2,9 +2,9 @@
 
 namespace Pvtor.Application.Contracts.Notes.Operations;
 
-public static class CreateNote
+public static class UpdateNote
 {
-    public readonly record struct Request(string Content);
+    public readonly record struct Request(long NoteId, string Content);
 
     public abstract record Response
     {

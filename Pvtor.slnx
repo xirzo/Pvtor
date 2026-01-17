@@ -19,7 +19,6 @@
     </Folder>
     <Folder Name="/src/Infrastructure/">
         <Project Path="src/Infrastructure/Pvtor.Infrastructure.Sqlite/Pvtor.Infrastructure.Sqlite.csproj" />
-        <Project Path="src/Infrastructure/Pvtor.Infrastructure.TelegramRecorder/Pvtor.Infrastructure.TelegramRecorder.csproj" />
     </Folder>
     <Folder Name="/src/Presentation/">
         <Project Path="src/Presentation/Pvtor.Presentation.Http/Pvtor.Presentation.Http.csproj" />

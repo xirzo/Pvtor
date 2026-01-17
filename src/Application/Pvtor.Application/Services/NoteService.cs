@@ -1,5 +1,4 @@
-﻿using Pvtor.Application.Abstractions;
-using Pvtor.Application.Abstractions.Persistence;
+﻿using Pvtor.Application.Abstractions.Persistence;
 using Pvtor.Application.Contracts.Notes;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
@@ -13,12 +12,10 @@ namespace Pvtor.Application.Services;
 internal sealed class NoteService : INoteService
 {
     private readonly IPersistanceContext _context;
-    private readonly INoteCorrelationRecorder _correlationRecorder;
 
-    public NoteService(IPersistanceContext context, INoteCorrelationRecorder correlationRecorder)
+    public NoteService(IPersistanceContext context)
     {
         _context = context;
-        _correlationRecorder = correlationRecorder;
     }
 
     public async Task<CreateNote.Response> CreateNoteAsync(
@@ -31,16 +28,16 @@ internal sealed class NoteService : INoteService
                 new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow),
                 cancellationToken);
 
-            await _correlationRecorder.RecordCorrelationAsync(
-                note.NoteId,
-                new NoteSourceId(request.Source),
-                cancellationToken);
-
             return new CreateNote.Response.Success(note.MapToDto());
         }
         catch (Exception ex)
         {
             return new CreateNote.Response.PersistenceFailure(ex.Message);
         }
+    }
+
+    public Task<UpdateNote.Response> UpdateNodeAsync(UpdateNote.Request request, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 }

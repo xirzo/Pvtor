@@ -10,5 +10,5 @@ public interface INoteCorrelationRepository
 {
     Task AddAsync(NoteCorrelation noteCorrelation, CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<NoteCorrelation>> Query(NoteCorrelationQuery query, CancellationToken cancellationToken = default);
+    Task<IEnumerable<NoteCorrelation>> QueryAsync(NoteCorrelationQuery query, CancellationToken cancellationToken = default);
 }

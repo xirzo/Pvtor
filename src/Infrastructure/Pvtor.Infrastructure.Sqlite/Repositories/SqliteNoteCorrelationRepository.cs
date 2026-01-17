@@ -39,7 +39,7 @@ public class SqliteNoteCorrelationRepository : INoteCorrelationRepository
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    public Task<IEnumerable<NoteCorrelation>> Query(
+    public Task<IEnumerable<NoteCorrelation>> QueryAsync(
         NoteCorrelationQuery query,
         CancellationToken cancellationToken = default)
     {

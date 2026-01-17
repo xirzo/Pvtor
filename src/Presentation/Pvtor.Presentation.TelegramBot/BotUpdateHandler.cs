@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pvtor.Application.Contracts.Notes;
+using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using System;
 using System.Threading;
@@ -13,17 +14,21 @@ namespace Pvtor.Presentation.TelegramBot;
 
 public class BotUpdateHandler : IUpdateHandler
 {
-    private const string RequestSource = "Telegram";
-
     private readonly ITelegramBotClient _bot;
     private readonly ILogger<BotUpdateHandler> _logger;
     private readonly INoteService _noteService;
+    private readonly INoteCorrelationService _correlationService;
 
-    public BotUpdateHandler(ITelegramBotClient bot, ILogger<BotUpdateHandler> logger, INoteService noteService)
+    public BotUpdateHandler(
+        ITelegramBotClient bot,
+        ILogger<BotUpdateHandler> logger,
+        INoteService noteService,
+        INoteCorrelationService correlationService)
     {
         _bot = bot;
         _logger = logger;
         _noteService = noteService;
+        _correlationService = correlationService;
     }
 
     public async Task HandleErrorAsync(
@@ -64,7 +69,9 @@ public class BotUpdateHandler : IUpdateHandler
         }
 
         CreateNote.Response createNoteResponse =
-            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText, RequestSource), cancellationToken);
+            await _noteService.CreateNoteAsync(
+                new CreateNote.Request(messageText),
+                cancellationToken);
 
         switch (createNoteResponse)
         {
@@ -83,24 +90,35 @@ public class BotUpdateHandler : IUpdateHandler
     private async Task OnMessageEdited(Message message, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Receive edited message, type: {MessageType}", message.Type);
-        if (message.Text is not { } messageText)
+        if (message.Text is not { } newMessageText)
         {
             _logger.LogInformation("Message text is null, skipping...");
             return;
         }
 
-        // TODO: add update
-        CreateNote.Response createNoteResponse =
-            await _noteService.CreateNoteAsync(new CreateNote.Request(messageText, RequestSource), cancellationToken);
+        NoteCorrelationDto? correlation =
+            await _correlationService.FindBySourceIdAsync(message.Id.ToString());
 
-        switch (createNoteResponse)
+        if (correlation is null)
         {
-            case CreateNote.Response.PersistenceFailure persistenceFailure:
+            _logger.LogInformation("Message with id: {MessageId} doesn't exist", message.Id);
+            await OnMessage(message, cancellationToken);
+            return;
+        }
+
+        UpdateNote.Response updateNoteResponse =
+            await _noteService.UpdateNodeAsync(
+                new UpdateNote.Request(correlation.NoteId, newMessageText),
+                cancellationToken);
+
+        switch (updateNoteResponse)
+        {
+            case UpdateNote.Response.PersistenceFailure persistenceFailure:
                 _logger.LogInformation(
-                    $"Failed to save message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
+                    $"Failed to update message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
                 break;
-            case CreateNote.Response.Success success:
-                _logger.LogInformation($"Saved message with id: {message.Id} as note with id: {success.Note.NoteId}");
+            case UpdateNote.Response.Success:
+                _logger.LogInformation($"Updated message with id: {message.Id}");
                 break;
         }
 
