@@ -13,6 +13,9 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<INoteRepository>(_ =>
             new SqliteNoteRepository(connectionString));
+        services.AddSingleton<INoteCorrelationRepository>(_ =>
+            new SqliteNoteCorrelationRepository(connectionString));
+
         return services;
     }
 }
