@@ -39,51 +39,22 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
     public async Task OnNoteChanged(NoteDto note)
     {
-        _logger.LogInformation(
-            $"Note with id {note.NoteId} was changed, syncing telegram...");
+        _logger.LogInformation($"Note with id {note.NoteId} was changed, syncing telegram...");
 
-        var correlations =
-            (await _correlationService.FindByNoteIdAsync(note.NoteId))
-            .ToList();
+        IEnumerable<NoteCorrelationDto> correlations = await _correlationService.FindByNoteIdAsync(note.NoteId);
+        var correlationMap = correlations.ToDictionary(x => x.NoteChannelId);
 
-        var allChats = (await _channelService.GetAll())
-            .ToList();
-
-        var chatsWithExistingCorrelation = new List<(NoteChannelDto, NoteCorrelationDto)>();
-        var noCorrelationChats = new List<NoteChannelDto>();
+        IEnumerable<NoteChannelDto> allChats = await _channelService.GetAll();
 
         foreach (NoteChannelDto chat in allChats)
         {
-            NoteCorrelationDto? correlation = correlations.FirstOrDefault(x => x.NoteChannelId == chat.NoteChannelId);
-            if (correlation != null)
+            if (correlationMap.TryGetValue(chat.NoteChannelId, out NoteCorrelationDto? correlation))
             {
-                chatsWithExistingCorrelation.Add((chat, correlation));
+                await UpdateMessageAsync(chat, correlation, note);
+                continue;
             }
-            else
-            {
-                noCorrelationChats.Add(chat);
-            }
-        }
 
-        foreach ((NoteChannelDto chat, NoteCorrelationDto correlation) in chatsWithExistingCorrelation)
-        {
-            // FIX: unsafe
-            int messageId = Convert.ToInt32(correlation.NoteSourceId);
-
-            await _bot.EditMessageText(
-                new ChatId(chat.NoteSourceChannelId),
-                messageId,
-                note.Content);
-            _logger.LogInformation($"Edited message in the chat with id: {chat.NoteSourceChannelId}");
-        }
-
-        foreach (NoteChannelDto chat in noCorrelationChats)
-        {
-            Message message =
-                await _bot.SendMessage(new ChatId(chat.NoteSourceChannelId), note.Content);
-            _logger.LogInformation($"Sent message to no correlation chat with id: {chat.NoteSourceChannelId}");
-
-            await RecordCorrelation(message, note.NoteId);
+            await SendMessageAsync(chat, note);
         }
     }
 
@@ -93,7 +64,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         HandleErrorSource source,
         CancellationToken cancellationToken)
     {
-        _logger.LogInformation("HandleError: {Exception}", exception);
+        _logger.LogInformation($"HandleError: {exception}");
 
         if (exception is RequestException)
         {
@@ -117,133 +88,194 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         });
     }
 
-    private async Task OnMessage(Message message, CancellationToken cancellationToken)
-    {
-        _logger.LogInformation("Receive message type: {MessageType}", message.Type);
-        if (message.Text is not { } messageText)
-        {
-            _logger.LogInformation("Message text is null, skipping...");
-            return;
-        }
-
-        string[] words = message.Text.Split(' ');
-
-        // TODO: add edit command
-        // TODO: if some tryhard parsing is required use CoR from OOP labwork4
-        if (words[0] is "/register")
-        {
-            await _channelService.RegisterChannelAsync(
-                new RegisterChannel.Request(message.Chat.Id.ToString()),
-                cancellationToken);
-
-            await _bot.SendMessage(
-                message.Chat,
-                "Successfully registered the chat",
-                cancellationToken: cancellationToken);
-            return;
-        }
-
-        if (await _channelService.IsSourceChatRegistered(message.Chat.Id.ToString()) is false)
-        {
-            _logger.LogInformation(
-                $"Message was skipped, as a telegram chat with id {message.Chat.Id} is not registered...");
-            return;
-        }
-
-        CreateNote.Response createNoteResponse =
-            await _noteService.CreateNoteAsync(
-                new CreateNote.Request(messageText),
-                cancellationToken);
-
-        switch (createNoteResponse)
-        {
-            case CreateNote.Response.PersistenceFailure persistenceFailure:
-                _logger.LogError(
-                    $"Failed to save message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
-                break;
-            case CreateNote.Response.Success createSuccess:
-                await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
-                _logger.LogInformation(
-                    $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
-                Message botMessage = await _bot.SendMessage(
-                    message.Chat,
-                    messageText,
-                    cancellationToken: cancellationToken);
-                _logger.LogInformation(
-                    $"Sent a response message with id: {botMessage.Id} in chat with id: {botMessage.Chat.Id}");
-                await RecordCorrelation(botMessage, createSuccess.Note.NoteId, cancellationToken);
-
-                // await RecordCorrelation(message, createSuccess.Note.NoteId, cancellationToken);
-                break;
-        }
-
-        await _bot.SendMessage(message.Chat, "DEBUG: Saved message", cancellationToken: cancellationToken);
-    }
-
-    private async Task RecordCorrelation(Message message, long noteId, CancellationToken cancellationToken = default)
-    {
-        _logger.LogInformation($"Saved message with id: {message.Id} as note with id: {noteId}");
-
-        RecordCorrelation.Response recordResponse =
-            await _correlationService.RecordCorrelationAsync(
-                new RecordCorrelation.Request(noteId, message.Id.ToString(), message.Chat.Id),
-                cancellationToken);
-
-        switch (recordResponse)
-        {
-            case RecordCorrelation.Response.PersistenceFailure recordPersistenceFailure:
-                _logger.LogError(
-                    $"Failed to record correlation for message with id: {message.Id}, persistence failure: {recordPersistenceFailure.Message}");
-                break;
-            case Application.Contracts.Notes.Operations.RecordCorrelation.Response.Success:
-                _logger.LogInformation(
-                    $"Saved correlation for message with id: {message.Id} (note with id: {noteId})");
-                break;
-        }
-    }
-
     private async Task OnMessageEdited(Message message, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Receive edited message, type: {MessageType}", message.Type);
+        _logger.LogInformation($"Receive edited message, type: {message.Type}");
         if (message.Text is not { } newMessageText)
         {
             _logger.LogInformation("Message text is null, skipping...");
             return;
         }
 
-        NoteCorrelationDto? correlations =
-            (await _correlationService.FindBySourceIdAsync(message.Id.ToString()))
+        NoteCorrelationDto? correlation = (await _correlationService.FindBySourceIdAsync(message.Id.ToString()))
             .SingleOrDefault();
 
-        if (correlations is null)
+        if (correlation is null)
         {
-            _logger.LogInformation("Message with id: {MessageId} doesn't exist", message.Id);
+            _logger.LogInformation($"Message with id: {message.Id} doesn't exist");
             await OnMessage(message, cancellationToken);
             return;
         }
 
-        UpdateNote.Response updateNoteResponse =
-            await _noteService.UpdateNodeAsync(
-                new UpdateNote.Request(correlations.NoteId, newMessageText),
-                cancellationToken);
+        UpdateNote.Response updateResponse = await _noteService.UpdateNodeAsync(
+            new UpdateNote.Request(correlation.NoteId, newMessageText),
+            cancellationToken);
 
-        switch (updateNoteResponse)
+        if (updateResponse is UpdateNote.Response.PersistenceFailure failure)
         {
-            case UpdateNote.Response.PersistenceFailure persistenceFailure:
-                _logger.LogInformation(
-                    $"Failed to update message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
-                break;
-            case UpdateNote.Response.Success:
-                _logger.LogInformation($"Updated message with id: {message.Id}");
-                break;
+            _logger.LogInformation(
+                $"Failed to update message with id: {message.Id}, persistence failure: {failure.Message}");
+            return;
         }
 
+        _logger.LogInformation($"Updated message with id: {message.Id}");
         await _bot.SendMessage(message.Chat, "DEBUG: Edited message", cancellationToken: cancellationToken);
+    }
+
+    private async Task OnMessage(Message message, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation($"Receive message type: {message.Type}");
+        if (message.Text is not { } messageText)
+        {
+            _logger.LogInformation("Message text is null, skipping...");
+            return;
+        }
+
+        string[] words = messageText.Split(' ');
+
+        if (words[0] is "/register")
+        {
+            await RegisterChannelAsync(message, cancellationToken);
+            return;
+        }
+
+        NoteChannelDto? currentChannel = await _channelService.FindBySourceChannelIdAsync(message.Chat.Id.ToString());
+
+        if (currentChannel is null)
+        {
+            _logger.LogInformation(
+                $"Message was skipped, as a telegram chat with id {message.Chat.Id} is not registered...");
+            return;
+        }
+
+        CreateNote.Response createResponse = await _noteService.CreateNoteAsync(
+            new CreateNote.Request(messageText),
+            cancellationToken);
+
+        switch (createResponse)
+        {
+            case CreateNote.Response.PersistenceFailure failure:
+                _logger.LogError(
+                    $"Failed to save message with id: {message.Id}, persistence failure: {failure.Message}");
+                break;
+            case CreateNote.Response.Success success:
+                await ProcessSuccessfulNoteCreation(
+                    message,
+                    messageText,
+                    success.Note.NoteId,
+                    currentChannel.NoteChannelId,
+                    cancellationToken);
+                break;
+        }
+    }
+
+    private async Task ProcessSuccessfulNoteCreation(
+        Message originalMessage,
+        string text,
+        long noteId,
+        long channelId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _bot.DeleteMessage(originalMessage.Chat.Id, originalMessage.Id, cancellationToken);
+            _logger.LogInformation(
+                $"Deleted user message with id: {originalMessage.Id} in chat with id: {originalMessage.Chat.Id}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Could not delete original message (might lack permissions)");
+        }
+
+        Message botMessage = await _bot.SendMessage(
+            originalMessage.Chat,
+            text,
+            cancellationToken: cancellationToken);
+
+        _logger.LogInformation(
+            $"Sent a response message with id: {botMessage.Id} in chat with id: {botMessage.Chat.Id}");
+
+        await RecordCorrelation(botMessage, noteId, channelId, cancellationToken);
+
+        await _bot.SendMessage(originalMessage.Chat, "DEBUG: Saved message", cancellationToken: cancellationToken);
+    }
+
+    private async Task SendMessageAsync(NoteChannelDto chat, NoteDto note)
+    {
+        try
+        {
+            Message message = await _bot.SendMessage(new ChatId(chat.NoteSourceChannelId), note.Content);
+            _logger.LogInformation($"Sent message to chat with id: {chat.NoteSourceChannelId}");
+
+            await RecordCorrelation(message, note.NoteId, chat.NoteChannelId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to send/record message in chat {chat.NoteSourceChannelId}");
+        }
+    }
+
+    private async Task RegisterChannelAsync(Message message, CancellationToken cancellationToken)
+    {
+        await _channelService.RegisterChannelAsync(
+            new RegisterChannel.Request(message.Chat.Id.ToString()),
+            cancellationToken);
+
+        await _bot.SendMessage(
+            message.Chat,
+            "Successfully registered the chat",
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task UpdateMessageAsync(NoteChannelDto chat, NoteCorrelationDto correlation, NoteDto note)
+    {
+        if (!int.TryParse(correlation.NoteSourceId, out int messageId))
+        {
+            _logger.LogError(
+                $"Correlation found for Channel {chat.NoteChannelId}, but MessageId '{correlation.NoteSourceId}' is not a valid integer.");
+            return;
+        }
+
+        try
+        {
+            await _bot.EditMessageText(
+                new ChatId(chat.NoteSourceChannelId),
+                messageId,
+                note.Content);
+            _logger.LogInformation($"Edited message in the chat with id: {chat.NoteSourceChannelId}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Failed to edit message in chat {chat.NoteSourceChannelId}");
+        }
+    }
+
+    private async Task RecordCorrelation(
+        Message message,
+        long noteId,
+        long channelId,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation($"Saved message with id: {message.Id} as note with id: {noteId}");
+
+        RecordCorrelation.Response response = await _correlationService.RecordCorrelationAsync(
+            new RecordCorrelation.Request(noteId, message.Id.ToString(), channelId),
+            cancellationToken);
+
+        if (response is RecordCorrelation.Response.PersistenceFailure failure)
+        {
+            _logger.LogError(
+                $"Failed to record correlation for message with id: {message.Id}, persistence failure: {failure.Message}");
+        }
+        else
+        {
+            _logger.LogInformation($"Saved correlation for message with id: {message.Id} (note with id: {noteId})");
+        }
     }
 
     private Task UnknownUpdateHandlerAsync(Update update)
     {
-        _logger.LogInformation("Unknown update type: {UpdateType}", update.Type);
+        _logger.LogInformation($"Unknown update type: {update.Type}");
         return Task.CompletedTask;
     }
 }

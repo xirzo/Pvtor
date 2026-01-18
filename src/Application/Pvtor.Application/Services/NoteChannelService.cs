@@ -51,12 +51,11 @@ public class NoteChannelService : INoteChannelService
         return channels.Select(x => x.MapToDto());
     }
 
-    public async Task<bool> IsSourceChatRegistered(string sourceChatId)
+    public async Task<NoteChannelDto?> FindBySourceChannelIdAsync(string sourceChatId)
     {
-        NoteChannel? channel = (await _context.NoteChannelRepository.QueryAsync(NoteChannelQuery.Build(builder =>
+        return (await _context.NoteChannelRepository.QueryAsync(NoteChannelQuery.Build(builder =>
                 builder.WithNoteSourceChannelId(sourceChatId))))
-            .SingleOrDefault();
-
-        return channel is not null;
+            .SingleOrDefault()
+            ?.MapToDto();
     }
 }

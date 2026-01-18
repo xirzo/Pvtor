@@ -14,5 +14,5 @@ public interface INoteChannelService
 
     Task<IEnumerable<NoteChannelDto>> GetAll();
 
-    Task<bool> IsSourceChatRegistered(string sourceChatId);
+    Task<NoteChannelDto?> FindBySourceChannelIdAsync(string sourceChatId);
 }
