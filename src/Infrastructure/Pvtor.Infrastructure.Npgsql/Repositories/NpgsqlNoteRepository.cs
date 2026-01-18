@@ -37,7 +37,8 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         command.Parameters.AddWithValue("@content", note.Content);
         command.Parameters.AddWithValue("@creation_date", note.CreationDate);
         command.Parameters.AddWithValue("@update_date", note.UpdateDate);
-        command.Parameters.AddWithValue("@note_namespace_id", note.NoteNamespaceId.Value);
+        object noteNamespaceId = note.NoteNamespaceId is null ? DBNull.Value : note.NoteNamespaceId.Value;
+        command.Parameters.AddWithValue("@note_namespace_id", noteNamespaceId);
 
         long noteId = (long)(await command.ExecuteScalarAsync(cancellationToken)
                              ?? throw new InvalidOperationException("Failed to get note id from insertion"));
@@ -110,7 +111,8 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
 
         command.Parameters.AddWithValue("@content", note.Content);
         command.Parameters.AddWithValue("@update_date", note.UpdateDate);
-        command.Parameters.AddWithValue("@note_namespace_id", note.NoteNamespaceId.Value);
+        object noteNamespaceId = note.NoteNamespaceId is null ? DBNull.Value : note.NoteNamespaceId.Value;
+        command.Parameters.AddWithValue("@note_namespace_id", noteNamespaceId);
         command.Parameters.AddWithValue("@note_id", note.NoteId.Value);
 
         int rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken);

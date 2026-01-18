@@ -10,7 +10,7 @@ public sealed record Note
         string content,
         DateTime creationDate,
         DateTime updateDate,
-        NoteNamespaceId noteNamespaceId)
+        NoteNamespaceId? noteNamespaceId)
     {
         NoteId = noteId;
         Content = content;
@@ -27,5 +27,5 @@ public sealed record Note
 
     public DateTime UpdateDate { get; }
 
-    public NoteNamespaceId NoteNamespaceId { get; }
+    public NoteNamespaceId? NoteNamespaceId { get; }
 }
