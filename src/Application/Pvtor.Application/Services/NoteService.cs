@@ -5,6 +5,7 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
+using Pvtor.Domain.Notes.Namespaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,7 +31,7 @@ internal sealed class NoteService : INoteService
         try
         {
             Note note = await _context.NoteRepository.AddAsync(
-                new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow),
+                new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow, NoteNamespaceId.Default),
                 cancellationToken);
 
             NoteDto noteDto = note.MapToDto();
