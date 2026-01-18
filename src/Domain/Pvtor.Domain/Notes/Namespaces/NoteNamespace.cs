@@ -1,3 +1,5 @@
-﻿namespace Pvtor.Domain.Notes.Namespaces;
+﻿using System;
 
-public record NoteNamespace(NoteNamespaceId NoteNamespaceId, string Name);
+namespace Pvtor.Domain.Notes.Namespaces;
+
+public sealed record NoteNamespace(NoteNamespaceId NoteNamespaceId, string Name, DateTime CreationDate);
