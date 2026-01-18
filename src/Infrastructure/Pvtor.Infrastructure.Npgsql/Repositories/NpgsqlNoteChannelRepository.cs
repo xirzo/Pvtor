@@ -104,7 +104,7 @@ public class NpgsqlNoteChannelRepository : INoteChannelRepository
 
         command.CommandText = """
                                 DELETE FROM notes_channels 
-                                WHERE note_source_channel_id = @noteSourceChannelId
+                                WHERE note_source_channel_id = @note_source_channel_id
                               """;
 
         command.Parameters.AddWithValue("@note_source_channel_id", noteSourceChannelId);
