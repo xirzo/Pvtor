@@ -21,19 +21,22 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
     private readonly INoteService _noteService;
     private readonly INoteCorrelationService _correlationService;
     private readonly INoteChannelService _channelService;
+    private readonly INoteNamespaceService _namespaceService;
 
     public BotUpdateHandler(
         ITelegramBotClient bot,
         ILogger<BotUpdateHandler> logger,
         INoteService noteService,
         INoteCorrelationService correlationService,
-        INoteChannelService channelService)
+        INoteChannelService channelService,
+        INoteNamespaceService namespaceService)
     {
         _bot = bot;
         _logger = logger;
         _noteService = noteService;
         _correlationService = correlationService;
         _channelService = channelService;
+        _namespaceService = namespaceService;
         _noteService.AddSubscriber(this);
     }
 
@@ -132,16 +135,48 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
         string[] words = messageText.Split(' ');
 
-        if (words[0] is "/register")
+        switch (words[0])
         {
-            await RegisterChannelAsync(message, cancellationToken);
-            return;
-        }
+            case "/register" when words.Length is not 2:
+            {
+                _logger.LogInformation($"Register command did not provide a namespace, using default...: {words[1]}");
 
-        if (words[0] is "/unregister")
-        {
-            await UnregisterChannelAsync(message, cancellationToken);
-            return;
+                await RegisterChannelAsync(message, null, cancellationToken);
+                return;
+            }
+
+            case "/register":
+            {
+                string? noteNamespaceName = (await _namespaceService.FindByNameAsync(words[1]))?.Name;
+
+                if (noteNamespaceName is null)
+                {
+                    _logger.LogInformation($"Namespace with name: {words[1]} does not exist, creating a new...");
+                    CreateNamespace.Response response =
+                        await _namespaceService.CreateAsync(new CreateNamespace.Request(words[1]));
+
+                    switch (response)
+                    {
+                        case CreateNamespace.Response.PersistenceFailure persistenceFailure:
+                            _logger.LogError(
+                                $"Failed to create a namespace with name: {words[1]}, error: {persistenceFailure.Message}");
+                            return;
+                        case CreateNamespace.Response.Success success:
+                            noteNamespaceName = success.Namespace.Name;
+                            _logger.LogInformation($"Successfully created a new namespace with name: {words[1]}");
+                            break;
+                    }
+                }
+
+                await RegisterChannelAsync(message, noteNamespaceName, cancellationToken);
+                return;
+            }
+
+            case "/unregister":
+            {
+                await UnregisterChannelAsync(message, cancellationToken);
+                return;
+            }
         }
 
         NoteChannelDto? currentChannel = await _channelService.FindBySourceChannelIdAsync(message.Chat.Id.ToString());
@@ -153,6 +188,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
             return;
         }
 
+        // Get current namespace id from channel
         CreateNote.Response createResponse = await _noteService.CreateNoteAsync(
             new CreateNote.Request(messageText),
             cancellationToken);
@@ -194,7 +230,10 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         }
     }
 
-    private async Task RegisterChannelAsync(Message message, CancellationToken cancellationToken)
+    private async Task RegisterChannelAsync(
+        Message message,
+        string? noteNamespaceName,
+        CancellationToken cancellationToken)
     {
         RegisterChannel.Response response = await _channelService.RegisterChannelAsync(
             new RegisterChannel.Request(message.Chat.Id.ToString()),
@@ -210,7 +249,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
                 _logger.LogInformation(
                     $"Successfully registered the chat with id: {message.Chat.Id}");
 
-                var notes = (await _noteService.GetAllAsync())
+                var notes = (await _noteService.GetByNoteNamespace(noteNamespaceName))
                     .ToList();
 
                 foreach (NoteDto note in notes)

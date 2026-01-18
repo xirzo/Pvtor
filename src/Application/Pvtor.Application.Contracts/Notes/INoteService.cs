@@ -20,4 +20,11 @@ public interface INoteService
 
     // TODO: replace with query
     Task<IEnumerable<NoteDto>> GetAllAsync();
+
+    /// <summary>
+    /// Returns note namespaces that satisfy the condition
+    /// </summary>
+    /// <param name="noteNamespaceName">Null value means general namespace</param>
+    /// <returns></returns>
+    Task<IEnumerable<NoteDto>> GetByNoteNamespace(string? noteNamespaceName);
 }
