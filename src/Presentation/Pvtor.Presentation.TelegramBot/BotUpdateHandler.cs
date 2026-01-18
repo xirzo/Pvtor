@@ -119,7 +119,6 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         }
 
         _logger.LogInformation($"Updated message with id: {message.Id}");
-        await _bot.SendMessage(message.Chat, "DEBUG: Edited message", cancellationToken: cancellationToken);
     }
 
     private async Task OnMessage(Message message, CancellationToken cancellationToken)
@@ -158,46 +157,20 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
                 _logger.LogError(
                     $"Failed to save message with id: {message.Id}, persistence failure: {failure.Message}");
                 break;
-            case CreateNote.Response.Success success:
-                await ProcessSuccessfulNoteCreation(
-                    message,
-                    messageText,
-                    success.Note.NoteId,
-                    currentChannel.NoteChannelId,
-                    cancellationToken);
+            case CreateNote.Response.Success:
+                try
+                {
+                    await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
+                    _logger.LogInformation(
+                        $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Could not delete original message (might lack permissions)");
+                }
+
                 break;
         }
-    }
-
-    private async Task ProcessSuccessfulNoteCreation(
-        Message originalMessage,
-        string text,
-        long noteId,
-        long channelId,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _bot.DeleteMessage(originalMessage.Chat.Id, originalMessage.Id, cancellationToken);
-            _logger.LogInformation(
-                $"Deleted user message with id: {originalMessage.Id} in chat with id: {originalMessage.Chat.Id}");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Could not delete original message (might lack permissions)");
-        }
-
-        Message botMessage = await _bot.SendMessage(
-            originalMessage.Chat,
-            text,
-            cancellationToken: cancellationToken);
-
-        _logger.LogInformation(
-            $"Sent a response message with id: {botMessage.Id} in chat with id: {botMessage.Chat.Id}");
-
-        await RecordCorrelation(botMessage, noteId, channelId, cancellationToken);
-
-        await _bot.SendMessage(originalMessage.Chat, "DEBUG: Saved message", cancellationToken: cancellationToken);
     }
 
     private async Task SendMessageAsync(NoteChannelDto chat, NoteDto note)
