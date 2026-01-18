@@ -9,4 +9,6 @@ public interface IPersistanceContext
     INoteRepository NoteRepository { get; }
 
     INoteChannelRepository NoteChannelRepository { get; }
+
+    INoteNamespaceRepository NoteNamespaceRepository { get; }
 }

@@ -7,7 +7,7 @@ namespace Pvtor.Application.Abstractions.Persistence.Repositories;
 
 public interface INoteNamespaceRepository
 {
-    Task<NoteNamespace> CreateAsync(NoteNamespace noteNamespace);
+    Task<NoteNamespace> AddAsync(NoteNamespace noteNamespace);
 
     Task<IEnumerable<NoteNamespace>> QueryAsync(NoteNamespaceQuery query);
 }

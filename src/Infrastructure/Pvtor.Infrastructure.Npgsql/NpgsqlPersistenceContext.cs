@@ -8,11 +8,13 @@ public class NpgsqlPersistenceContext : IPersistanceContext
     public NpgsqlPersistenceContext(
         INoteCorrelationRepository noteCorrelationRepository,
         INoteRepository noteRepository,
-        INoteChannelRepository noteChannelRepository)
+        INoteChannelRepository noteChannelRepository,
+        INoteNamespaceRepository noteNamespaceRepository)
     {
         NoteCorrelationRepository = noteCorrelationRepository;
         NoteRepository = noteRepository;
         NoteChannelRepository = noteChannelRepository;
+        NoteNamespaceRepository = noteNamespaceRepository;
     }
 
     public INoteCorrelationRepository NoteCorrelationRepository { get; }
@@ -20,4 +22,6 @@ public class NpgsqlPersistenceContext : IPersistanceContext
     public INoteRepository NoteRepository { get; }
 
     public INoteChannelRepository NoteChannelRepository { get; }
+
+    public INoteNamespaceRepository NoteNamespaceRepository { get; }
 }

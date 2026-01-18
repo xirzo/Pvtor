@@ -17,6 +17,8 @@ public static class ServiceCollectionExtensions
             new NpgsqlNoteCorrelationRepository(connectionString));
         services.AddSingleton<INoteChannelRepository>(_ =>
             new NpgsqlNoteChannelRepository(connectionString));
+        services.AddSingleton<INoteNamespaceRepository>(_ =>
+            new NpgsqlNoteNamespaceRepository(connectionString));
 
         return services;
     }

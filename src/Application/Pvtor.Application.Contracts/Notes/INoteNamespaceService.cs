@@ -8,5 +8,5 @@ public interface INoteNamespaceService
 {
     Task<CreateNamespace.Response> CreateAsync(CreateNamespace.Request request);
 
-    Task<NoteNamespaceDto> FindByNameAsync(string name);
+    Task<NoteNamespaceDto?> FindByNameAsync(string name);
 }
