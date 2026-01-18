@@ -5,6 +5,8 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
+using Pvtor.Domain.Notes.Channels;
+using Pvtor.Domain.Notes.Correlations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +17,10 @@ namespace Pvtor.Application.Services;
 
 public class NoteCorrelationService : INoteCorrelationService
 {
+    // NOTE: for now that's just a placeholder,
+    // later on add some sort of channels/chats
+    // on frontend and pass them to endpoint.
+    // private const string ChannelSourceIdPlaceholder = "REST";
     private readonly IPersistanceContext _context;
 
     public NoteCorrelationService(IPersistanceContext context)
@@ -28,7 +34,10 @@ public class NoteCorrelationService : INoteCorrelationService
     {
         var noteCorrelation =
             new NoteCorrelation(
-                new NoteCorrelationId(new NoteSourceId(request.NoteSourceId), new NoteId(request.NoteId)),
+                new NoteCorrelationId(
+                    new NoteSourceId(request.NoteSourceId),
+                    new NoteChannelId(request.NoteChannelId)),
+                new NoteId(request.NoteId),
                 DateTime.UtcNow);
 
         try

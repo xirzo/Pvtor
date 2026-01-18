@@ -1,4 +1,4 @@
-﻿namespace Pvtor.Domain.Notes;
+﻿namespace Pvtor.Domain.Notes.Correlations;
 
 public readonly record struct NoteSourceId(string Value)
 {

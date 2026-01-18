@@ -1,5 +1,5 @@
 ﻿using Pvtor.Application.Abstractions.Persistence.Queries;
-using Pvtor.Domain.Notes;
+using Pvtor.Domain.Notes.Correlations;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
