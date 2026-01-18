@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
             return new TelegramBotClient(botOptions.BotToken);
         });
 
-        services.AddScoped<BotUpdateHandler>();
+        services.AddSingleton<BotUpdateHandler>();
         services.AddHostedService<BotBackgroundService>();
 
         return services;
