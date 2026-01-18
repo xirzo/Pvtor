@@ -6,6 +6,7 @@ using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -41,20 +42,25 @@ public class NoteCorrelationService : INoteCorrelationService
         }
     }
 
-    public async Task<NoteCorrelationDto?> FindBySourceIdAsync(string noteSourceId)
+    public async Task<IEnumerable<NoteCorrelationDto>> FindBySourceIdAsync(string noteSourceId)
     {
         var query =
             NoteCorrelationQuery.Build(builder => builder.WithNoteSourceId(new NoteSourceId(noteSourceId)));
 
-        NoteCorrelation? noteCorrelation = (await _context.NoteCorrelationRepository
-                .QueryAsync(query))
-            .SingleOrDefault();
+        IEnumerable<NoteCorrelation> noteCorrelation = await _context.NoteCorrelationRepository
+            .QueryAsync(query);
 
-        if (noteCorrelation is null)
-        {
-            return null;
-        }
+        return noteCorrelation.Select(x => x.MapToDto());
+    }
 
-        return noteCorrelation.MapToDto();
+    public async Task<IEnumerable<NoteCorrelationDto>> FindByNoteIdAsync(long noteId)
+    {
+        var query =
+            NoteCorrelationQuery.Build(builder => builder.WithNoteId(new NoteId(noteId)));
+
+        IEnumerable<NoteCorrelation> noteCorrelation = await _context.NoteCorrelationRepository
+            .QueryAsync(query);
+
+        return noteCorrelation.Select(x => x.MapToDto());
     }
 }

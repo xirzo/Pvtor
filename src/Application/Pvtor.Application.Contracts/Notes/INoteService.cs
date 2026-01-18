@@ -13,4 +13,6 @@ public interface INoteService
     Task<UpdateNote.Response> UpdateNodeAsync(
         UpdateNote.Request request,
         CancellationToken cancellationToken = default);
+
+    INoteChangeSubscription AddSubscriber(INoteChangedSubscriber subscriber);
 }
