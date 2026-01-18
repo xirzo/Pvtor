@@ -159,7 +159,16 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
                     $"Failed to save message with id: {message.Id}, persistence failure: {persistenceFailure.Message}");
                 break;
             case CreateNote.Response.Success createSuccess:
-                await RecordCorrelation(message, createSuccess.Note.NoteId, cancellationToken);
+                await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
+                _logger.LogInformation(
+                    $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
+                Message botMessage = await _bot.SendMessage(
+                    message.Chat,
+                    messageText,
+                    cancellationToken: cancellationToken);
+                _logger.LogInformation(
+                    $"Sent a response message with id: {botMessage.Id} in chat with id: {botMessage.Chat.Id}");
+                await RecordCorrelation(botMessage, createSuccess.Note.NoteId, cancellationToken);
                 break;
         }
 
