@@ -1,4 +1,6 @@
-﻿using Pvtor.Application.Contracts.Notes.Operations;
+﻿using Pvtor.Application.Contracts.Notes.Models;
+using Pvtor.Application.Contracts.Notes.Operations;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,4 +17,7 @@ public interface INoteService
         CancellationToken cancellationToken = default);
 
     INoteChangeSubscription AddSubscriber(INoteChangedSubscriber subscriber);
+
+    // TODO: replace with query
+    Task<IEnumerable<NoteDto>> GetAllAsync();
 }

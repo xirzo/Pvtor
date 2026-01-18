@@ -81,6 +81,12 @@ internal sealed class NoteService : INoteService
         return new Subscription(this, subscriber);
     }
 
+    public async Task<IEnumerable<NoteDto>> GetAllAsync()
+    {
+        return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder => builder.WithIds([]))))
+            .Select(x => x.MapToDto());
+    }
+
     private class Subscription(NoteService service, INoteChangedSubscriber subscriber) : INoteChangeSubscription
     {
         public void Unsubscribe()

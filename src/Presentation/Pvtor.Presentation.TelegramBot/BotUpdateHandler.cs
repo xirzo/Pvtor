@@ -44,7 +44,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         IEnumerable<NoteCorrelationDto> correlations = await _correlationService.FindByNoteIdAsync(note.NoteId);
         var correlationMap = correlations.ToDictionary(x => x.NoteChannelId);
 
-        IEnumerable<NoteChannelDto> allChats = await _channelService.GetAll();
+        IEnumerable<NoteChannelDto> allChats = await _channelService.GetAllAsync();
 
         foreach (NoteChannelDto chat in allChats)
         {
@@ -196,14 +196,30 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
     private async Task RegisterChannelAsync(Message message, CancellationToken cancellationToken)
     {
-        await _channelService.RegisterChannelAsync(
+        RegisterChannel.Response response = await _channelService.RegisterChannelAsync(
             new RegisterChannel.Request(message.Chat.Id.ToString()),
             cancellationToken);
 
-        await _bot.SendMessage(
-            message.Chat,
-            "Successfully registered the chat",
-            cancellationToken: cancellationToken);
+        switch (response)
+        {
+            case RegisterChannel.Response.PersistenceFailure persistenceFailure:
+                _logger.LogError(
+                    $"Failed to registered the chat with id: {message.Chat.Id}, error: {persistenceFailure.Message}");
+                break;
+            case RegisterChannel.Response.Success success:
+                _logger.LogInformation(
+                    $"Successfully registered the chat with id: {message.Chat.Id}");
+
+                var notes = (await _noteService.GetAllAsync())
+                    .ToList();
+
+                foreach (NoteDto note in notes)
+                {
+                    await SendMessageAsync(success.Channel, note);
+                }
+
+                break;
+        }
     }
 
     private async Task UnregisterChannelAsync(Message message, CancellationToken cancellationToken)

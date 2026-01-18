@@ -58,7 +58,7 @@ public class NoteChannelService : INoteChannelService
         }
     }
 
-    public async Task<IEnumerable<NoteChannelDto>> GetAll()
+    public async Task<IEnumerable<NoteChannelDto>> GetAllAsync()
     {
         var query = NoteChannelQuery.Build(builder => builder
             .WithIds([])
