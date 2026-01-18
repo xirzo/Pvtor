@@ -4,7 +4,7 @@ namespace Pvtor.Application.Contracts.Notes.Operations;
 
 public static class RegisterChannel
 {
-    public readonly record struct Request(string SourceChannelId);
+    public readonly record struct Request(string SourceChannelId, long? NoteNamespaceId = null);
 
     public abstract record Response
     {

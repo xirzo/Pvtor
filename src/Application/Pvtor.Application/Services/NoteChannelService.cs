@@ -5,6 +5,7 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes.Channels;
+using Pvtor.Domain.Notes.Namespaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,8 +29,13 @@ public class NoteChannelService : INoteChannelService
     {
         try
         {
+            // TODO: May cause a problem? Need to check if namespace exists and return an error
+            NoteNamespaceId? noteNamespaceId = request.NoteNamespaceId is null
+                ? null
+                : new NoteNamespaceId(request.NoteNamespaceId.Value);
+
             NoteChannel channel = await _context.NoteChannelRepository.AddAsync(
-                new NoteChannel(NoteChannelId.Default, request.SourceChannelId, DateTime.UtcNow),
+                new NoteChannel(NoteChannelId.Default, request.SourceChannelId, DateTime.UtcNow, noteNamespaceId),
                 cancellationToken);
 
             return new RegisterChannel.Response.Success(channel.MapToDto());

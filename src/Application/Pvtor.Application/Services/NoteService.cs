@@ -5,6 +5,7 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
+using Pvtor.Domain.Notes.Channels;
 using Pvtor.Domain.Notes.Namespaces;
 using System;
 using System.Collections.Generic;
@@ -89,6 +90,13 @@ internal sealed class NoteService : INoteService
     public async Task<IEnumerable<NoteDto>> GetAllAsync()
     {
         return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder => builder.WithIds([]))))
+            .Select(x => x.MapToDto());
+    }
+
+    public async Task<IEnumerable<NoteDto>> GetAllByChannelId(long channelNoteChannelId)
+    {
+        return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder =>
+                builder.WithNoteChannelId(new NoteChannelId(channelNoteChannelId)))))
             .Select(x => x.MapToDto());
     }
 

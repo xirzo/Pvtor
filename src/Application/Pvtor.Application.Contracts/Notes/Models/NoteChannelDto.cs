@@ -2,4 +2,8 @@
 
 namespace Pvtor.Application.Contracts.Notes.Models;
 
-public record NoteChannelDto(long NoteChannelId, string NoteSourceChannelId, DateTime CreationDate);
+public record NoteChannelDto(
+    long NoteChannelId,
+    string NoteSourceChannelId,
+    DateTime CreationDate,
+    long? NoteNamespaceId);

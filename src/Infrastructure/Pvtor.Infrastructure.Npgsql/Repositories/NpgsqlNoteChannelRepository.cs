@@ -2,6 +2,7 @@
 using Pvtor.Application.Abstractions.Persistence.Queries;
 using Pvtor.Application.Abstractions.Persistence.Repositories;
 using Pvtor.Domain.Notes.Channels;
+using Pvtor.Domain.Notes.Namespaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,13 +29,18 @@ public class NpgsqlNoteChannelRepository : INoteChannelRepository
         await using NpgsqlCommand command = connection.CreateCommand();
 
         command.CommandText = """
-                                INSERT INTO notes_channels (note_source_channel_id, creation_date) 
-                                VALUES (@note_source_channel_id, @creation_date)
-                                RETURNING note_channel_id, note_source_channel_id, creation_date;
+                                INSERT INTO notes_channels (note_source_channel_id, creation_date, note_namespace_id) 
+                                VALUES (@note_source_channel_id, @creation_date, @note_namespace_id)
+                                RETURNING note_channel_id, note_source_channel_id, creation_date, note_namespace_id;
                               """;
 
         command.Parameters.AddWithValue("@note_source_channel_id", channel.NoteSourceChannelId);
         command.Parameters.AddWithValue("@creation_date", channel.CreationDate);
+
+        object noteNamespaceId = channel.NoteNamespaceId.HasValue
+            ? channel.NoteNamespaceId.Value.Value
+            : DBNull.Value;
+        command.Parameters.AddWithValue("@note_namespace_id", noteNamespaceId);
 
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
 
@@ -55,7 +61,8 @@ public class NpgsqlNoteChannelRepository : INoteChannelRepository
 
         var parameters = new List<NpgsqlParameter>();
         var commandText =
-            new StringBuilder("SELECT note_channel_id, note_source_channel_id, creation_date FROM notes_channels");
+            new StringBuilder(
+                "SELECT note_channel_id, note_source_channel_id, creation_date, note_namespace_id FROM notes_channels");
         var whereConditions = new List<string>();
 
         if (query.Ids.Length > 0)
@@ -114,9 +121,14 @@ public class NpgsqlNoteChannelRepository : INoteChannelRepository
 
     private NoteChannel MapFromReader(NpgsqlDataReader reader)
     {
+        NoteNamespaceId? namespaceId = reader.IsDBNull(3)
+            ? null
+            : new NoteNamespaceId(reader.GetInt64(3));
+
         return new NoteChannel(
             new NoteChannelId(reader.GetInt64(0)),
             reader.GetString(1),
-            reader.GetDateTime(2));
+            reader.GetDateTime(2),
+            namespaceId);
     }
 }

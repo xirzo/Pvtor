@@ -10,6 +10,7 @@ public static class NoteChannelMappingExtensions
         return new NoteChannelDto(
             noteChannel.NoteChannelId.Value,
             noteChannel.NoteSourceChannelId,
-            noteChannel.CreationDate);
+            noteChannel.CreationDate,
+            noteChannel.NoteNamespaceId?.Value);
     }
 }

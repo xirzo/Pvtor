@@ -37,7 +37,12 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         command.Parameters.AddWithValue("@content", note.Content);
         command.Parameters.AddWithValue("@creation_date", note.CreationDate);
         command.Parameters.AddWithValue("@update_date", note.UpdateDate);
-        object noteNamespaceId = note.NoteNamespaceId is null ? DBNull.Value : note.NoteNamespaceId.Value;
+
+        // Handle Nullable Namespace ID for writing
+        object noteNamespaceId = note.NoteNamespaceId.HasValue
+            ? note.NoteNamespaceId.Value.Value // Access the long value inside the struct
+            : DBNull.Value;
+
         command.Parameters.AddWithValue("@note_namespace_id", noteNamespaceId);
 
         long noteId = (long)(await command.ExecuteScalarAsync(cancellationToken)
@@ -71,6 +76,17 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
 
             parameters.AddRange(query.NoteNamespaceIds.Select((noteNamespaceId, i) =>
                 new NpgsqlParameter($"@ns{i}", noteNamespaceId.Value)));
+        }
+
+        if (query.NoteChannelIds.Length > 0)
+        {
+            string placeholders = string.Join(",", query.NoteChannelIds.Select((_, i) => $"@ch{i}"));
+
+            whereConditions.Add(
+                $"note_id IN (SELECT note_id FROM notes_correlations WHERE note_channel_id IN ({placeholders}))");
+
+            parameters.AddRange(query.NoteChannelIds.Select((channelId, i) =>
+                new NpgsqlParameter($"@ch{i}", channelId.Value)));
         }
 
         if (whereConditions.Count > 0)
@@ -111,7 +127,11 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
 
         command.Parameters.AddWithValue("@content", note.Content);
         command.Parameters.AddWithValue("@update_date", note.UpdateDate);
-        object noteNamespaceId = note.NoteNamespaceId is null ? DBNull.Value : note.NoteNamespaceId.Value;
+
+        object noteNamespaceId = note.NoteNamespaceId.HasValue
+            ? note.NoteNamespaceId.Value.Value
+            : DBNull.Value;
+
         command.Parameters.AddWithValue("@note_namespace_id", noteNamespaceId);
         command.Parameters.AddWithValue("@note_id", note.NoteId.Value);
 
@@ -127,11 +147,15 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
 
     private Note MapNoteFromReader(NpgsqlDataReader reader)
     {
+        NoteNamespaceId? namespaceId = reader.IsDBNull(4)
+            ? null
+            : new NoteNamespaceId(reader.GetInt64(4));
+
         return new Note(
             new NoteId(reader.GetInt64(0)),
             reader.GetString(1),
             reader.GetDateTime(2),
             reader.GetDateTime(3),
-            new NoteNamespaceId(reader.GetInt64(4)));
+            namespaceId);
     }
 }
