@@ -2,7 +2,7 @@
 
 public static class RecordCorrelation
 {
-    public readonly record struct Request(long NoteId, string NoteSourceId);
+    public readonly record struct Request(long NoteId, string NoteSourceId, long NoteChannelId);
 
     public abstract record Response
     {

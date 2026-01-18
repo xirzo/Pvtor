@@ -1,16 +1,18 @@
 ﻿using Pvtor.Application.Abstractions.Persistence.Queries;
-using Pvtor.Domain.Notes.Correlations;
+using Pvtor.Domain.Notes.Channels;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pvtor.Application.Abstractions.Persistence.Repositories;
 
-public interface INoteCorrelationRepository
+public interface INoteChannelRepository
 {
-    Task AddAsync(NoteCorrelation noteCorrelation, CancellationToken cancellationToken = default);
+    Task<NoteChannel> AddAsync(
+        NoteChannel channel,
+        CancellationToken cancellationToken = default);
 
-    Task<IEnumerable<NoteCorrelation>> QueryAsync(
-        NoteCorrelationQuery query,
+    Task<IEnumerable<NoteChannel>> QueryAsync(
+        NoteChannelQuery query,
         CancellationToken cancellationToken = default);
 }

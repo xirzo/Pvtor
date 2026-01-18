@@ -1,10 +1,12 @@
 ﻿using Pvtor.Application.Abstractions.Persistence;
 using Pvtor.Application.Abstractions.Persistence.Queries;
 using Pvtor.Application.Contracts.Notes;
+using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +16,7 @@ namespace Pvtor.Application.Services;
 internal sealed class NoteService : INoteService
 {
     private readonly IPersistanceContext _context;
+    private readonly List<INoteChangedSubscriber> _subscribers = [];
 
     public NoteService(IPersistanceContext context)
     {
@@ -30,7 +33,14 @@ internal sealed class NoteService : INoteService
                 new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow),
                 cancellationToken);
 
-            return new CreateNote.Response.Success(note.MapToDto());
+            NoteDto noteDto = note.MapToDto();
+
+            foreach (INoteChangedSubscriber subscriber in _subscribers)
+            {
+                await subscriber.OnNoteChanged(noteDto);
+            }
+
+            return new CreateNote.Response.Success(noteDto);
         }
         catch (Exception ex)
         {
@@ -52,8 +62,30 @@ internal sealed class NoteService : INoteService
             return new UpdateNote.Response.NotFound($"Note with id: {request.NoteId} is not found");
         }
 
-        Note updatedNote = await _context.NoteRepository.UpdateAsync(note with { Content = request.Content });
+        Note updatedNote =
+            await _context.NoteRepository.UpdateAsync(note with { Content = request.Content }, cancellationToken);
 
-        return new UpdateNote.Response.Success(updatedNote.MapToDto());
+        NoteDto noteDto = updatedNote.MapToDto();
+
+        foreach (INoteChangedSubscriber subscriber in _subscribers)
+        {
+            await subscriber.OnNoteChanged(noteDto);
+        }
+
+        return new UpdateNote.Response.Success(noteDto);
+    }
+
+    public INoteChangeSubscription AddSubscriber(INoteChangedSubscriber subscriber)
+    {
+        _subscribers.Add(subscriber);
+        return new Subscription(this, subscriber);
+    }
+
+    private class Subscription(NoteService service, INoteChangedSubscriber subscriber) : INoteChangeSubscription
+    {
+        public void Unsubscribe()
+        {
+            service._subscribers.Remove(subscriber);
+        }
     }
 }

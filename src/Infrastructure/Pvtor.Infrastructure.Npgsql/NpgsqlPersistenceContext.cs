@@ -5,13 +5,19 @@ namespace Pvtor.Infrastructure.Npgsql;
 
 public class NpgsqlPersistenceContext : IPersistanceContext
 {
-    public NpgsqlPersistenceContext(INoteCorrelationRepository noteCorrelationRepository, INoteRepository noteRepository)
+    public NpgsqlPersistenceContext(
+        INoteCorrelationRepository noteCorrelationRepository,
+        INoteRepository noteRepository,
+        INoteChannelRepository noteChannelRepository)
     {
         NoteCorrelationRepository = noteCorrelationRepository;
         NoteRepository = noteRepository;
+        NoteChannelRepository = noteChannelRepository;
     }
 
     public INoteCorrelationRepository NoteCorrelationRepository { get; }
 
     public INoteRepository NoteRepository { get; }
+
+    public INoteChannelRepository NoteChannelRepository { get; }
 }

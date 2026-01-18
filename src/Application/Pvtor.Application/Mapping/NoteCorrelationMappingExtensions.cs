@@ -1,5 +1,5 @@
 ﻿using Pvtor.Application.Contracts.Notes.Models;
-using Pvtor.Domain.Notes;
+using Pvtor.Domain.Notes.Correlations;
 
 namespace Pvtor.Application.Mapping;
 
@@ -9,7 +9,8 @@ public static class NoteCorrelationMappingExtensions
     {
         return new NoteCorrelationDto(
             correlation.NoteCorrelationId.NoteSourceId.Value,
-            correlation.NoteCorrelationId.NoteId.Value,
+            correlation.NoteCorrelationId.NoteChannelId.Value,
+            correlation.NoteId.Value,
             correlation.CreationDate);
     }
 }

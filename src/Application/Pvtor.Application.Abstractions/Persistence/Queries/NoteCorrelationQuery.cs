@@ -1,4 +1,5 @@
 ﻿using Pvtor.Domain.Notes;
+using Pvtor.Domain.Notes.Correlations;
 using SourceKit.Generators.Builder.Annotations;
 
 namespace Pvtor.Application.Abstractions.Persistence.Queries;

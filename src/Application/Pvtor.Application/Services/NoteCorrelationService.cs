@@ -5,7 +5,10 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
+using Pvtor.Domain.Notes.Channels;
+using Pvtor.Domain.Notes.Correlations;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,6 +17,10 @@ namespace Pvtor.Application.Services;
 
 public class NoteCorrelationService : INoteCorrelationService
 {
+    // NOTE: for now that's just a placeholder,
+    // later on add some sort of channels/chats
+    // on frontend and pass them to endpoint.
+    // private const string ChannelSourceIdPlaceholder = "REST";
     private readonly IPersistanceContext _context;
 
     public NoteCorrelationService(IPersistanceContext context)
@@ -27,7 +34,10 @@ public class NoteCorrelationService : INoteCorrelationService
     {
         var noteCorrelation =
             new NoteCorrelation(
-                new NoteCorrelationId(new NoteSourceId(request.NoteSourceId), new NoteId(request.NoteId)),
+                new NoteCorrelationId(
+                    new NoteSourceId(request.NoteSourceId),
+                    new NoteChannelId(request.NoteChannelId)),
+                new NoteId(request.NoteId),
                 DateTime.UtcNow);
 
         try
@@ -41,20 +51,25 @@ public class NoteCorrelationService : INoteCorrelationService
         }
     }
 
-    public async Task<NoteCorrelationDto?> FindBySourceIdAsync(string noteSourceId)
+    public async Task<IEnumerable<NoteCorrelationDto>> FindBySourceIdAsync(string noteSourceId)
     {
         var query =
             NoteCorrelationQuery.Build(builder => builder.WithNoteSourceId(new NoteSourceId(noteSourceId)));
 
-        NoteCorrelation? noteCorrelation = (await _context.NoteCorrelationRepository
-                .QueryAsync(query))
-            .SingleOrDefault();
+        IEnumerable<NoteCorrelation> noteCorrelation = await _context.NoteCorrelationRepository
+            .QueryAsync(query);
 
-        if (noteCorrelation is null)
-        {
-            return null;
-        }
+        return noteCorrelation.Select(x => x.MapToDto());
+    }
 
-        return noteCorrelation.MapToDto();
+    public async Task<IEnumerable<NoteCorrelationDto>> FindByNoteIdAsync(long noteId)
+    {
+        var query =
+            NoteCorrelationQuery.Build(builder => builder.WithNoteId(new NoteId(noteId)));
+
+        IEnumerable<NoteCorrelation> noteCorrelation = await _context.NoteCorrelationRepository
+            .QueryAsync(query);
+
+        return noteCorrelation.Select(x => x.MapToDto());
     }
 }

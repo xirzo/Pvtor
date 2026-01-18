@@ -1,5 +1,6 @@
 ﻿using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,5 +12,7 @@ public interface INoteCorrelationService
         RecordCorrelation.Request request,
         CancellationToken cancellationToken = default);
 
-    Task<NoteCorrelationDto?> FindBySourceIdAsync(string noteSourceId);
+    Task<IEnumerable<NoteCorrelationDto>> FindBySourceIdAsync(string noteSourceId);
+
+    Task<IEnumerable<NoteCorrelationDto>> FindByNoteIdAsync(long noteId);
 }

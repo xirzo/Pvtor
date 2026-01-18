@@ -7,4 +7,6 @@ public interface IPersistanceContext
     INoteCorrelationRepository NoteCorrelationRepository { get; }
 
     INoteRepository NoteRepository { get; }
+
+    INoteChannelRepository NoteChannelRepository { get; }
 }

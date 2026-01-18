@@ -19,7 +19,6 @@
     </Folder>
     <Folder Name="/src/Infrastructure/">
         <Project Path="src/Infrastructure/Pvtor.Infrastructure.Npgsql/Pvtor.Infrastructure.Npgsql.csproj" />
-        <Project Path="src/Infrastructure/Pvtor.Infrastructure.Sqlite/Pvtor.Infrastructure.Sqlite.csproj" />
     </Folder>
     <Folder Name="/src/Presentation/">
         <Project Path="src/Presentation/Pvtor.Presentation.Http/Pvtor.Presentation.Http.csproj" />
