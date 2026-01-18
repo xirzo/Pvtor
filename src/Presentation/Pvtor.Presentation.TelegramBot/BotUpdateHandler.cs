@@ -138,6 +138,12 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
             return;
         }
 
+        if (words[0] is "/unregister")
+        {
+            await UnregisterChannelAsync(message, cancellationToken);
+            return;
+        }
+
         NoteChannelDto? currentChannel = await _channelService.FindBySourceChannelIdAsync(message.Chat.Id.ToString());
 
         if (currentChannel is null)
@@ -197,6 +203,18 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         await _bot.SendMessage(
             message.Chat,
             "Successfully registered the chat",
+            cancellationToken: cancellationToken);
+    }
+
+    private async Task UnregisterChannelAsync(Message message, CancellationToken cancellationToken)
+    {
+        await _channelService.UnregisterChannelAsync(
+            new UnregisterChannel.Request(message.Chat.Id.ToString()),
+            cancellationToken);
+
+        await _bot.SendMessage(
+            message.Chat,
+            "Successfully unregistered the chat",
             cancellationToken: cancellationToken);
     }
 

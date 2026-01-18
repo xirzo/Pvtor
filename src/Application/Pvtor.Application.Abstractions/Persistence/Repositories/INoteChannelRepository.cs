@@ -15,4 +15,6 @@ public interface INoteChannelRepository
     Task<IEnumerable<NoteChannel>> QueryAsync(
         NoteChannelQuery query,
         CancellationToken cancellationToken = default);
+
+    Task RemoveBySourceChannelIdAsync(string noteSourceChannelId, CancellationToken cancellationToken);
 }

@@ -95,6 +95,23 @@ public class NpgsqlNoteChannelRepository : INoteChannelRepository
         return result;
     }
 
+    public async Task RemoveBySourceChannelIdAsync(string noteSourceChannelId, CancellationToken cancellationToken)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using NpgsqlCommand command = connection.CreateCommand();
+
+        command.CommandText = """
+                                DELETE FROM notes_channels 
+                                WHERE note_source_channel_id = @noteSourceChannelId
+                              """;
+
+        command.Parameters.AddWithValue("@note_source_channel_id", noteSourceChannelId);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private NoteChannel MapFromReader(NpgsqlDataReader reader)
     {
         return new NoteChannel(

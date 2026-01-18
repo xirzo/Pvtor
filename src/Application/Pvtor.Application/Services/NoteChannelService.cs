@@ -40,6 +40,24 @@ public class NoteChannelService : INoteChannelService
         }
     }
 
+    public async Task<UnregisterChannel.Response> UnregisterChannelAsync(
+        UnregisterChannel.Request request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _context.NoteChannelRepository.RemoveBySourceChannelIdAsync(
+                request.SourceChannelId,
+                cancellationToken);
+
+            return new UnregisterChannel.Response.Success();
+        }
+        catch (Exception ex)
+        {
+            return new UnregisterChannel.Response.PersistenceFailure(ex.Message);
+        }
+    }
+
     public async Task<IEnumerable<NoteChannelDto>> GetAll()
     {
         var query = NoteChannelQuery.Build(builder => builder

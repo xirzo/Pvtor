@@ -12,6 +12,10 @@ public interface INoteChannelService
         RegisterChannel.Request request,
         CancellationToken cancellationToken = default);
 
+    Task<UnregisterChannel.Response> UnregisterChannelAsync(
+        UnregisterChannel.Request request,
+        CancellationToken cancellationToken);
+
     Task<IEnumerable<NoteChannelDto>> GetAll();
 
     Task<NoteChannelDto?> FindBySourceChannelIdAsync(string sourceChatId);
