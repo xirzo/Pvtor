@@ -74,12 +74,14 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
                 new ChatId(chat.NoteSourceChannelId),
                 messageId,
                 note.Content);
+            _logger.LogInformation($"Edited message in the chat with id: {chat.NoteSourceChannelId}");
         }
 
         foreach (NoteChannelDto chat in noCorrelationChats)
         {
             Message message =
                 await _bot.SendMessage(new ChatId(chat.NoteSourceChannelId), note.Content);
+            _logger.LogInformation($"Sent message to no correlation chat with id: {chat.NoteSourceChannelId}");
 
             await RecordCorrelation(message, note.NoteId);
         }
@@ -126,6 +128,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
         string[] words = message.Text.Split(' ');
 
+        // TODO: add edit command
         // TODO: if some tryhard parsing is required use CoR from OOP labwork4
         if (words[0] is "/register")
         {
@@ -169,6 +172,8 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
                 _logger.LogInformation(
                     $"Sent a response message with id: {botMessage.Id} in chat with id: {botMessage.Chat.Id}");
                 await RecordCorrelation(botMessage, createSuccess.Note.NoteId, cancellationToken);
+
+                // await RecordCorrelation(message, createSuccess.Note.NoteId, cancellationToken);
                 break;
         }
 
