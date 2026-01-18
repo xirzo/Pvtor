@@ -19,6 +19,8 @@ TELEGRAM_SECRET_TOKEN=SECRET_TOKEN
 SFTP_SERVER=sftp.example.com
 SFTP_USERNAME=deploy_user
 SFTP_PASSWORD=deploy_password
+SFTP_PORT=22
+SYSTEMD_SERVICE_NAME=pvtor
 ```
 
 ```sh

@@ -47,3 +47,19 @@ jobs:
         local_path: ${{ env.PUBLISH_OUTPUT_DIR }}/*
         remote_path: /app/publish/
         sftp_only: true
+
+  restart-service:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Restart service
+      uses: appleboy/ssh-action@v1.2.0
+      with:
+        host: ${{ secrets.SFTP_SERVER }}
+        username: ${{ secrets.SFTP_USERNAME }}
+        password: ${{ secrets.SFTP_PASSWORD }}
+        port: ${{ secrets.SFTP_PORT }}
+        script: |
+            sudo systemctl restart ${{ secrets.SYSTEMD_SERVICE_NAME }}
+   
