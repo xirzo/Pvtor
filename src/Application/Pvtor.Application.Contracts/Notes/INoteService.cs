@@ -22,4 +22,6 @@ public interface INoteService
     Task<IEnumerable<NoteDto>> GetAllAsync();
 
     Task<IEnumerable<NoteDto>> GetAllByChannelId(long channelNoteChannelId);
+
+    Task<IEnumerable<NoteDto>> GetAllByNamespaceId(long? channelNoteNamespaceId);
 }

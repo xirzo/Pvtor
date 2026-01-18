@@ -100,6 +100,21 @@ internal sealed class NoteService : INoteService
             .Select(x => x.MapToDto());
     }
 
+    public async Task<IEnumerable<NoteDto>> GetAllByNamespaceId(long? channelNoteNamespaceId)
+    {
+        if (channelNoteNamespaceId is null)
+        {
+            // TODO: this returns all of the namespaces?
+            return (await _context.NoteRepository.QueryAsync(
+                    NoteQuery.Build(builder => builder.WithNoteNamespaceIds([]))))
+                .Select(x => x.MapToDto());
+        }
+
+        return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder =>
+                builder.WithNoteNamespaceId(new NoteNamespaceId(channelNoteNamespaceId.Value)))))
+            .Select(x => x.MapToDto());
+    }
+
     private class Subscription(NoteService service, INoteChangedSubscriber subscriber) : INoteChangeSubscription
     {
         public void Unsubscribe()
