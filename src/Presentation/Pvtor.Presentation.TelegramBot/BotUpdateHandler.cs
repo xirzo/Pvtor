@@ -208,14 +208,25 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
     private async Task UnregisterChannelAsync(Message message, CancellationToken cancellationToken)
     {
-        await _channelService.UnregisterChannelAsync(
+        UnregisterChannel.Response response = await _channelService.UnregisterChannelAsync(
             new UnregisterChannel.Request(message.Chat.Id.ToString()),
             cancellationToken);
 
-        await _bot.SendMessage(
-            message.Chat,
-            "Successfully unregistered the chat",
-            cancellationToken: cancellationToken);
+        switch (response)
+        {
+            case UnregisterChannel.Response.PersistenceFailure persistenceFailure:
+                _logger.LogError(
+                    $"Failed to unregistered the chat with id: {message.Chat.Id}, error: {persistenceFailure.Message}");
+                break;
+
+            case UnregisterChannel.Response.Success:
+                _logger.LogInformation($"Successfully unregistered the chat with id: {message.Chat.Id}");
+                await _bot.SendMessage(
+                    message.Chat,
+                    "Successfully unregistered the chat",
+                    cancellationToken: cancellationToken);
+                break;
+        }
     }
 
     private async Task UpdateMessageAsync(NoteChannelDto chat, NoteCorrelationDto correlation, NoteDto note)
