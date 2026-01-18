@@ -132,6 +132,19 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
             await _channelService.RegisterChannelAsync(
                 new RegisterChannel.Request(message.Chat.Id.ToString()),
                 cancellationToken);
+
+            await _bot.SendMessage(
+                message.Chat,
+                "Successfully registered the chat",
+                cancellationToken: cancellationToken);
+            return;
+        }
+
+        if (await _channelService.IsSourceChatRegistered(message.Chat.Id.ToString()) is false)
+        {
+            _logger.LogInformation(
+                $"Message was skipped, as a telegram chat with id {message.Chat.Id} is not registered...");
+            return;
         }
 
         CreateNote.Response createNoteResponse =

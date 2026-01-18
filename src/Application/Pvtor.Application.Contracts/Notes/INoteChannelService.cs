@@ -13,4 +13,6 @@ public interface INoteChannelService
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<NoteChannelDto>> GetAll();
+
+    Task<bool> IsSourceChatRegistered(string sourceChatId);
 }
