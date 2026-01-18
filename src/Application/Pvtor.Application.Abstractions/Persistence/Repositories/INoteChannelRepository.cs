@@ -8,8 +8,8 @@ namespace Pvtor.Application.Abstractions.Persistence.Repositories;
 
 public interface INoteChannelRepository
 {
-    Task<IEnumerable<NoteChannel>> AddAsync(
-        NoteChannelQuery query,
+    Task<NoteChannel> AddAsync(
+        NoteChannel channel,
         CancellationToken cancellationToken = default);
 
     Task<IEnumerable<NoteChannel>> QueryAsync(

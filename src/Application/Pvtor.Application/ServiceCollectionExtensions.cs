@@ -10,6 +10,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<INoteService, NoteService>();
         services.AddSingleton<INoteCorrelationService, NoteCorrelationService>();
+        services.AddSingleton<INoteChannelService, NoteChannelService>();
         return services;
     }
 }

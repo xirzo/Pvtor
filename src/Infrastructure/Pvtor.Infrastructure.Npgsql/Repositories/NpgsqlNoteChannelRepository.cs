@@ -20,52 +20,30 @@ public class NpgsqlNoteChannelRepository : INoteChannelRepository
         _connectionString = connectionString;
     }
 
-    public async Task<IEnumerable<NoteChannel>> AddAsync(
-        NoteChannelQuery query,
-        CancellationToken cancellationToken = default)
+    public async Task<NoteChannel> AddAsync(NoteChannel channel, CancellationToken cancellationToken = default)
     {
-        if (query.NoteSourceChannelIds.Length == 0)
-        {
-            return Enumerable.Empty<NoteChannel>();
-        }
-
         await using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
 
-        var parameters = new List<NpgsqlParameter>();
-        var valuesClauses = new List<string>();
-        DateTime now = DateTime.UtcNow;
-
-        for (int i = 0; i < query.NoteSourceChannelIds.Length; i++)
-        {
-            string pName = $"@p{i}";
-            string dName = $"@d{i}";
-            valuesClauses.Add($"({pName}, {dName})");
-            parameters.Add(new NpgsqlParameter(pName, query.NoteSourceChannelIds[i]));
-            parameters.Add(new NpgsqlParameter(dName, now));
-        }
-
         await using NpgsqlCommand command = connection.CreateCommand();
 
-#pragma warning disable CA2100
-        command.CommandText = $"""
-                               INSERT INTO notes_channels (note_source_channel_id, creation_date) 
-                               VALUES {string.Join(", ", valuesClauses)}
-                               RETURNING note_channel_id, note_source_channel_id, creation_date;
-                               """;
-#pragma warning restore CA2100
+        command.CommandText = """
+                                INSERT INTO notes_channels (note_source_channel_id, creation_date) 
+                                VALUES (@note_source_channel_id, @creation_date)
+                                RETURNING note_channel_id, note_source_channel_id, creation_date;
+                              """;
 
-        command.Parameters.AddRange(parameters.ToArray());
+        command.Parameters.AddWithValue("@note_source_channel_id", channel.NoteSourceChannelId);
+        command.Parameters.AddWithValue("@creation_date", channel.CreationDate);
 
-        var result = new List<NoteChannel>();
         await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        while (await reader.ReadAsync(cancellationToken))
+        if (await reader.ReadAsync(cancellationToken))
         {
-            result.Add(MapFromReader(reader));
+            return MapFromReader(reader);
         }
 
-        return result;
+        throw new InvalidOperationException("Database failed to return the inserted note channel.");
     }
 
     public async Task<IEnumerable<NoteChannel>> QueryAsync(
