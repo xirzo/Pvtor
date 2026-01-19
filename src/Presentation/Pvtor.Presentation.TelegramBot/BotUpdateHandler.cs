@@ -2,6 +2,10 @@
 using Pvtor.Application.Contracts.Notes;
 using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
+using Pvtor.Presentation.TelegramBot.Commands;
+using Pvtor.Presentation.TelegramBot.Parsing;
+using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Register;
+using Pvtor.Presentation.TelegramBot.Parsing.Results;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +26,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
     private readonly INoteCorrelationService _correlationService;
     private readonly INoteChannelService _channelService;
     private readonly INoteNamespaceService _namespaceService;
+    private readonly ArgParser _argParser;
 
     public BotUpdateHandler(
         ITelegramBotClient bot,
@@ -38,6 +43,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         _channelService = channelService;
         _namespaceService = namespaceService;
         _noteService.AddSubscriber(this);
+        _argParser = new ArgParser(new RegisterCommandParser(new RegisterNamespaceParser()));
     }
 
     public async Task OnNoteChanged(NoteDto note)
@@ -47,11 +53,11 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         IEnumerable<NoteCorrelationDto> correlations = await _correlationService.FindByNoteIdAsync(note.NoteId);
         var correlationMap = correlations.ToDictionary(x => x.NoteChannelId);
 
+        // TODO: find channels by namespace id
         IEnumerable<NoteChannelDto> allChats = await _channelService.GetAllAsync();
 
         foreach (NoteChannelDto chat in allChats)
         {
-            // FIX: Ensure we only broadcast to channels within the same namespace
             if (chat.NoteNamespaceId != note.NoteNamespaceId)
             {
                 continue;
@@ -106,48 +112,80 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
         string[] words = messageText.Split(' ');
 
-        if (words[0] == "/register")
+        if (messageText.StartsWith('/'))
         {
             await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
+
             _logger.LogInformation(
                 $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
 
-            if (words.Length == 1)
+            ParseResult parseResult = _argParser.Parse(messageText);
+
+            if (parseResult is ParseResult.Failure parseFailure)
             {
-                _logger.LogInformation("Register command did not provide a namespace, using default...");
-                await RegisterChannelAsync(message, null, cancellationToken);
+                _logger.LogError($"Failed to parse command: {parseFailure.Error.ToString()}");
                 return;
             }
 
-            if (words.Length == 2)
+            if (parseResult is ParseResult.Success parseSuccess)
             {
-                string namespaceName = words[1];
-                NoteNamespaceDto? noteNamespace = await _namespaceService.FindByNameAsync(namespaceName);
-
-                if (noteNamespace is null)
-                {
-                    _logger.LogInformation($"Namespace with name: {namespaceName} does not exist, creating a new...");
-                    CreateNamespace.Response response =
-                        await _namespaceService.CreateAsync(new CreateNamespace.Request(namespaceName));
-
-                    switch (response)
-                    {
-                        case CreateNamespace.Response.PersistenceFailure persistenceFailure:
-                            _logger.LogError(
-                                $"Failed to create a namespace with name: {namespaceName}, error: {persistenceFailure.Message}");
-                            return;
-                        case CreateNamespace.Response.Success success:
-                            noteNamespace = success.Namespace;
-                            _logger.LogInformation($"Successfully created a new namespace with name: {namespaceName}");
-                            break;
-                    }
-                }
-
-                await RegisterChannelAsync(message, noteNamespace?.NoteNamespaceId, cancellationToken);
+                _logger.LogInformation("Successfully parsed command, executting...");
+                var context = new CommandExecuteContext(
+                    message,
+                    _bot,
+                    _namespaceService,
+                    _channelService,
+                    _noteService,
+                    _correlationService,
+                    _logger);
+                await parseSuccess.Command.ExecuteAsync(context, cancellationToken);
                 return;
             }
         }
-        else if (words[0] == "/unregister")
+
+        // TODO: REMOVE THESE HUGE IFs
+        // if (words[0] == "/register")
+        // {
+        //     await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
+        //     _logger.LogInformation(
+        //         $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
+        //
+        //     if (words.Length == 1)
+        //     {
+        //         _logger.LogInformation("Register command did not provide a namespace, using default...");
+        //         await RegisterChannelAsync(message, null, cancellationToken);
+        //         return;
+        //     }
+        //
+        //     if (words.Length == 2)
+        //     {
+        //         string namespaceName = words[1];
+        //         NoteNamespaceDto? noteNamespace = await _namespaceService.FindByNameAsync(namespaceName);
+        //
+        //         if (noteNamespace is null)
+        //         {
+        //             _logger.LogInformation($"Namespace with name: {namespaceName} does not exist, creating a new...");
+        //             CreateNamespace.Response response =
+        //                 await _namespaceService.CreateAsync(new CreateNamespace.Request(namespaceName));
+        //
+        //             switch (response)
+        //             {
+        //                 case CreateNamespace.Response.PersistenceFailure persistenceFailure:
+        //                     _logger.LogError(
+        //                         $"Failed to create a namespace with name: {namespaceName}, error: {persistenceFailure.Message}");
+        //                     return;
+        //                 case CreateNamespace.Response.Success success:
+        //                     noteNamespace = success.Namespace;
+        //                     _logger.LogInformation($"Successfully created a new namespace with name: {namespaceName}");
+        //                     break;
+        //             }
+        //         }
+        //
+        //         await RegisterChannelAsync(message, noteNamespace?.NoteNamespaceId, cancellationToken);
+        //         return;
+        //     }
+        // }
+        if (words[0] == "/unregister")
         {
             await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
             _logger.LogInformation(
@@ -240,37 +278,6 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Failed to send/record message in chat {chat.NoteSourceChannelId}");
-        }
-    }
-
-    private async Task RegisterChannelAsync(
-        Message message,
-        long? noteNamespaceId,
-        CancellationToken cancellationToken)
-    {
-        RegisterChannel.Response response = await _channelService.RegisterChannelAsync(
-            new RegisterChannel.Request(message.Chat.Id.ToString(), noteNamespaceId),
-            cancellationToken);
-
-        switch (response)
-        {
-            case RegisterChannel.Response.PersistenceFailure persistenceFailure:
-                _logger.LogError(
-                    $"Failed to register the chat with id: {message.Chat.Id}, error: {persistenceFailure.Message}");
-                break;
-            case RegisterChannel.Response.Success success:
-                _logger.LogInformation(
-                    $"Successfully registered the chat with id: {message.Chat.Id}");
-
-                var notes = (await _noteService.GetAllByNamespaceId(success.Channel.NoteNamespaceId))
-                    .ToList();
-
-                foreach (NoteDto note in notes)
-                {
-                    await SendMessageAsync(success.Channel, note);
-                }
-
-                break;
         }
     }
 
