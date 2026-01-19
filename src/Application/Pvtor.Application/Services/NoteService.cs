@@ -104,9 +104,8 @@ internal sealed class NoteService : INoteService
     {
         if (channelNoteNamespaceId is null)
         {
-            // TODO: this returns all of the namespaces?
             return (await _context.NoteRepository.QueryAsync(
-                    NoteQuery.Build(builder => builder.WithNoteNamespaceIds([]))))
+                    NoteQuery.Build(builder => builder.WithUseNullNamespace(true))))
                 .Select(x => x.MapToDto());
         }
 

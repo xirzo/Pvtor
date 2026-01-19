@@ -65,17 +65,28 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         {
             string placeholders = string.Join(",", query.Ids.Select((_, i) => $"@id{i}"));
             whereConditions.Add($"note_id IN ({placeholders})");
-
             parameters.AddRange(query.Ids.Select((noteId, i) => new NpgsqlParameter($"@id{i}", noteId.Value)));
         }
+
+        var namespaceFilters = new List<string>();
 
         if (query.NoteNamespaceIds.Length > 0)
         {
             string placeholders = string.Join(",", query.NoteNamespaceIds.Select((_, i) => $"@ns{i}"));
-            whereConditions.Add($"note_namespace_id IN ({placeholders})");
+            namespaceFilters.Add($"note_namespace_id IN ({placeholders})");
 
             parameters.AddRange(query.NoteNamespaceIds.Select((noteNamespaceId, i) =>
                 new NpgsqlParameter($"@ns{i}", noteNamespaceId.Value)));
+        }
+
+        if (query.UseNullNamespace)
+        {
+            namespaceFilters.Add("note_namespace_id IS NULL");
+        }
+
+        if (namespaceFilters.Count > 0)
+        {
+            whereConditions.Add($"({string.Join(" OR ", namespaceFilters)})");
         }
 
         if (query.NoteChannelIds.Length > 0)
