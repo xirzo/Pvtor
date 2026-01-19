@@ -11,11 +11,12 @@ public class EditCommandContentParser : ParameterParserBase<EditCommandBuilder>
     {
         var stringBuilder = new StringBuilder();
 
-        while (words.MoveNext())
+        do
         {
             stringBuilder.Append(words.Current);
             stringBuilder.Append(' ');
         }
+        while (words.MoveNext());
 
         builder.WithContent(stringBuilder.ToString().TrimEnd());
 
