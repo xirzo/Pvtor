@@ -4,7 +4,6 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Presentation.TelegramBot.Commands;
 using Pvtor.Presentation.TelegramBot.Parsing;
-using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Register;
 using Pvtor.Presentation.TelegramBot.Parsing.Results;
 using System;
 using System.Collections.Generic;
@@ -34,7 +33,8 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         INoteService noteService,
         INoteCorrelationService correlationService,
         INoteChannelService channelService,
-        INoteNamespaceService namespaceService)
+        INoteNamespaceService namespaceService,
+        ArgParser argParser)
     {
         _bot = bot;
         _logger = logger;
@@ -43,7 +43,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         _channelService = channelService;
         _namespaceService = namespaceService;
         _noteService.AddSubscriber(this);
-        _argParser = new ArgParser(new RegisterCommandParser(new RegisterNamespaceParser()));
+        _argParser = argParser;
     }
 
     public async Task OnNoteChanged(NoteDto note)
@@ -129,7 +129,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
             if (parseResult is ParseResult.Success parseSuccess)
             {
-                _logger.LogInformation("Successfully parsed command, executting...");
+                _logger.LogInformation("Successfully parsed command, executing...");
                 var context = new CommandExecuteContext(
                     message,
                     _bot,
@@ -144,56 +144,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         }
 
         // TODO: REMOVE THESE HUGE IFs
-        // if (words[0] == "/register")
-        // {
-        //     await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
-        //     _logger.LogInformation(
-        //         $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
-        //
-        //     if (words.Length == 1)
-        //     {
-        //         _logger.LogInformation("Register command did not provide a namespace, using default...");
-        //         await RegisterChannelAsync(message, null, cancellationToken);
-        //         return;
-        //     }
-        //
-        //     if (words.Length == 2)
-        //     {
-        //         string namespaceName = words[1];
-        //         NoteNamespaceDto? noteNamespace = await _namespaceService.FindByNameAsync(namespaceName);
-        //
-        //         if (noteNamespace is null)
-        //         {
-        //             _logger.LogInformation($"Namespace with name: {namespaceName} does not exist, creating a new...");
-        //             CreateNamespace.Response response =
-        //                 await _namespaceService.CreateAsync(new CreateNamespace.Request(namespaceName));
-        //
-        //             switch (response)
-        //             {
-        //                 case CreateNamespace.Response.PersistenceFailure persistenceFailure:
-        //                     _logger.LogError(
-        //                         $"Failed to create a namespace with name: {namespaceName}, error: {persistenceFailure.Message}");
-        //                     return;
-        //                 case CreateNamespace.Response.Success success:
-        //                     noteNamespace = success.Namespace;
-        //                     _logger.LogInformation($"Successfully created a new namespace with name: {namespaceName}");
-        //                     break;
-        //             }
-        //         }
-        //
-        //         await RegisterChannelAsync(message, noteNamespace?.NoteNamespaceId, cancellationToken);
-        //         return;
-        //     }
-        // }
-        if (words[0] == "/unregister")
-        {
-            await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
-            _logger.LogInformation(
-                $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
-            await UnregisterChannelAsync(message, cancellationToken);
-            return;
-        }
-        else if (words[0] == "/edit" && message.ReplyToMessage is { } replyToMessage)
+        if (words[0] == "/edit" && message.ReplyToMessage is { } replyToMessage)
         {
             _logger.LogInformation($"Receive edit command for a message with id: {message.Id}");
 
@@ -278,25 +229,6 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         catch (Exception ex)
         {
             _logger.LogError(ex, $"Failed to send/record message in chat {chat.NoteSourceChannelId}");
-        }
-    }
-
-    private async Task UnregisterChannelAsync(Message message, CancellationToken cancellationToken)
-    {
-        UnregisterChannel.Response response = await _channelService.UnregisterChannelAsync(
-            new UnregisterChannel.Request(message.Chat.Id.ToString()),
-            cancellationToken);
-
-        switch (response)
-        {
-            case UnregisterChannel.Response.PersistenceFailure persistenceFailure:
-                _logger.LogError(
-                    $"Failed to unregister the chat with id: {message.Chat.Id}, error: {persistenceFailure.Message}");
-                break;
-
-            case UnregisterChannel.Response.Success:
-                _logger.LogInformation($"Successfully unregistered the chat with id: {message.Chat.Id}");
-                break;
         }
     }
 

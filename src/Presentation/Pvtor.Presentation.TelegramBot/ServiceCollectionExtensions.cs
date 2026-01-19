@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Pvtor.Presentation.TelegramBot.Parsing;
+using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Register;
 using System;
 using Telegram.Bot;
 
@@ -25,6 +27,10 @@ public static class ServiceCollectionExtensions
 
             return new TelegramBotClient(botOptions.BotToken);
         });
+
+        var argParser = new ArgParser(new RegisterCommandParser(new RegisterNamespaceParser()));
+
+        services.AddSingleton(argParser);
 
         services.AddSingleton<BotUpdateHandler>();
         services.AddHostedService<BotBackgroundService>();
