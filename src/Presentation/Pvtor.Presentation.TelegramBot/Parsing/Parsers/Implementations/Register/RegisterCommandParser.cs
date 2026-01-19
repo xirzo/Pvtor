@@ -15,7 +15,7 @@ public class RegisterCommandParser : CommandParserBase
 
     public override CommandParseResult Parse(IEnumerator<string> words)
     {
-        if (words.Current is not "register")
+        if (words.Current is not "/register")
         {
             if (Next is null)
             {
