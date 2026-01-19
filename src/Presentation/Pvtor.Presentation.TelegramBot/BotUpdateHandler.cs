@@ -108,6 +108,10 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
         if (words[0] == "/register")
         {
+            await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
+            _logger.LogInformation(
+                $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
+
             if (words.Length == 1)
             {
                 _logger.LogInformation("Register command did not provide a namespace, using default...");
@@ -145,6 +149,9 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         }
         else if (words[0] == "/unregister")
         {
+            await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
+            _logger.LogInformation(
+                $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
             await UnregisterChannelAsync(message, cancellationToken);
             return;
         }
@@ -152,9 +159,14 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
         {
             _logger.LogInformation($"Receive edit command for a message with id: {message.Id}");
 
+            await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
+            _logger.LogInformation(
+                $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
+
             string newMessageText = message.Text.Substring("/edit".Length, message.Text.Length - 1);
 
-            NoteCorrelationDto? correlation = (await _correlationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
+            NoteCorrelationDto? correlation =
+                (await _correlationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
                 .SingleOrDefault();
 
             if (correlation is null)
@@ -273,10 +285,6 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
             case UnregisterChannel.Response.Success:
                 _logger.LogInformation($"Successfully unregistered the chat with id: {message.Chat.Id}");
-                await _bot.SendMessage(
-                    message.Chat,
-                    "Successfully unregistered the chat",
-                    cancellationToken: cancellationToken);
                 break;
         }
     }
