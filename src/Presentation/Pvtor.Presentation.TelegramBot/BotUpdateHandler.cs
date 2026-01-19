@@ -189,6 +189,8 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
                 _logger.LogInformation($"Edited message with id: {replyToMessage.Id}");
             }
+
+            return;
         }
 
         NoteChannelDto? currentChannel = await _channelService.FindBySourceChannelIdAsync(message.Chat.Id.ToString());
