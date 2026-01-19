@@ -165,28 +165,30 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
 
             string newMessageText = message.Text.Replace("/edit", string.Empty, StringComparison.InvariantCulture);
 
-            NoteCorrelationDto? correlation =
-                (await _correlationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
-                .SingleOrDefault();
+            var correlations = (await _correlationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
+                .ToList();
 
-            if (correlation is null)
+            if (correlations is [])
             {
-                _logger.LogInformation($"Correlation for message with id: {replyToMessage.Id} doesn't ");
+                _logger.LogInformation($"No correlations found for message with id: {replyToMessage.Id}");
                 return;
             }
 
-            UpdateNote.Response updateResponse = await _noteService.UpdateNodeAsync(
-                new UpdateNote.Request(correlation.NoteId, newMessageText),
-                cancellationToken);
-
-            if (updateResponse is UpdateNote.Response.PersistenceFailure failure)
+            foreach (NoteCorrelationDto correlation in correlations)
             {
-                _logger.LogInformation(
-                    $"Failed to edit message with id: {replyToMessage.Id}, persistence failure: {failure.Message}");
-                return;
-            }
+                UpdateNote.Response updateResponse = await _noteService.UpdateNodeAsync(
+                    new UpdateNote.Request(correlation.NoteId, newMessageText),
+                    cancellationToken);
 
-            _logger.LogInformation($"Edited message with id: {replyToMessage.Id}");
+                if (updateResponse is UpdateNote.Response.PersistenceFailure failure)
+                {
+                    _logger.LogInformation(
+                        $"Failed to edit message with id: {replyToMessage.Id}, persistence failure: {failure.Message}");
+                    return;
+                }
+
+                _logger.LogInformation($"Edited message with id: {replyToMessage.Id}");
+            }
         }
 
         NoteChannelDto? currentChannel = await _channelService.FindBySourceChannelIdAsync(message.Chat.Id.ToString());
