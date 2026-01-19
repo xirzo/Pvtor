@@ -2,7 +2,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pvtor.Presentation.TelegramBot.Parsing;
+using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Edit;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Register;
+using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Unregister;
 using System;
 using Telegram.Bot;
 
@@ -28,7 +30,9 @@ public static class ServiceCollectionExtensions
             return new TelegramBotClient(botOptions.BotToken);
         });
 
-        var argParser = new ArgParser(new RegisterCommandParser(new RegisterNamespaceParser()));
+        var argParser = new ArgParser(new RegisterCommandParser(new RegisterNamespaceParser())
+            .AddNext(new UnregisterCommandParser())
+            .AddNext(new EditCommandParser(new EditCommandContentParser())));
 
         services.AddSingleton(argParser);
 

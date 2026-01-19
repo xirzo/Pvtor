@@ -110,8 +110,6 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
             return;
         }
 
-        string[] words = messageText.Split(' ');
-
         if (messageText.StartsWith('/'))
         {
             await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
@@ -141,45 +139,6 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
                 await parseSuccess.Command.ExecuteAsync(context, cancellationToken);
                 return;
             }
-        }
-
-        // TODO: REMOVE THESE HUGE IFs
-        if (words[0] == "/edit" && message.ReplyToMessage is { } replyToMessage)
-        {
-            _logger.LogInformation($"Receive edit command for a message with id: {message.Id}");
-
-            await _bot.DeleteMessage(message.Chat.Id, message.Id, cancellationToken);
-            _logger.LogInformation(
-                $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
-
-            string newMessageText = message.Text.Replace("/edit", string.Empty, StringComparison.InvariantCulture);
-
-            var correlations = (await _correlationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
-                .ToList();
-
-            if (correlations is [])
-            {
-                _logger.LogInformation($"No correlations found for message with id: {replyToMessage.Id}");
-                return;
-            }
-
-            foreach (NoteCorrelationDto correlation in correlations)
-            {
-                UpdateNote.Response updateResponse = await _noteService.UpdateNodeAsync(
-                    new UpdateNote.Request(correlation.NoteId, newMessageText),
-                    cancellationToken);
-
-                if (updateResponse is UpdateNote.Response.PersistenceFailure failure)
-                {
-                    _logger.LogInformation(
-                        $"Failed to edit message with id: {replyToMessage.Id}, persistence failure: {failure.Message}");
-                    return;
-                }
-
-                _logger.LogInformation($"Edited message with id: {replyToMessage.Id}");
-            }
-
-            return;
         }
 
         NoteChannelDto? currentChannel = await _channelService.FindBySourceChannelIdAsync(message.Chat.Id.ToString());

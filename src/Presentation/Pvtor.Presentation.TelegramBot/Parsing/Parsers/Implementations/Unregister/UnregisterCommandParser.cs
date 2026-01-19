@@ -8,7 +8,7 @@ public class UnregisterCommandParser : CommandParserBase
 {
     // private readonly IParameterParser<UnregisterCommandBuilder> _parametersParser;
     //
-    // public UnregisterCommandParser(IParameterParser<UnregisterCommandBuilder> parametersParser)
+    // public EditCommandParser(IParameterParser<UnregisterCommandBuilder> parametersParser)
     // {
     //     _parametersParser = parametersParser;
     // }
