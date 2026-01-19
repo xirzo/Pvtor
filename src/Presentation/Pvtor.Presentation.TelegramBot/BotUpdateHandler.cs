@@ -163,7 +163,7 @@ public class BotUpdateHandler : IUpdateHandler, INoteChangedSubscriber
             _logger.LogInformation(
                 $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
 
-            string newMessageText = message.Text.Substring("/edit".Length, message.Text.Length - 1);
+            string newMessageText = message.Text.Replace("/edit", string.Empty, StringComparison.InvariantCulture);
 
             NoteCorrelationDto? correlation =
                 (await _correlationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
