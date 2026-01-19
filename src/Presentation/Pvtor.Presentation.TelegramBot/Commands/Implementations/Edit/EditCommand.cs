@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
-using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,8 +31,7 @@ public class EditCommand : ICommand
             return;
         }
 
-        string newMessageText =
-            _content.Replace("/edit", string.Empty, StringComparison.InvariantCulture);
+        context.Logger.LogInformation($"New edited text: \"{_content}\"");
 
         var correlations = (await context.CorrelationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
             .ToList();
@@ -47,7 +45,7 @@ public class EditCommand : ICommand
         foreach (NoteCorrelationDto correlation in correlations)
         {
             UpdateNote.Response updateResponse = await context.NoteService.UpdateNodeAsync(
-                new UpdateNote.Request(correlation.NoteId, newMessageText),
+                new UpdateNote.Request(correlation.NoteId, _content),
                 cancellationToken);
 
             if (updateResponse is UpdateNote.Response.PersistenceFailure failure)
