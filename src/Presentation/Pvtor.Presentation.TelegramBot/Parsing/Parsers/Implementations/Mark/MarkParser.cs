@@ -15,7 +15,7 @@ public class MarkParser : CommandParserBase
 
     public override CommandParseResult Parse(IEnumerator<string> words)
     {
-        if (words.Current is not "mark")
+        if (words.Current is not "/mark")
         {
             if (Next is null)
             {

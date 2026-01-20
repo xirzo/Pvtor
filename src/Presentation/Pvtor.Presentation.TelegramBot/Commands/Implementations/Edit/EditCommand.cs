@@ -19,7 +19,7 @@ public class EditCommand : ICommand
 
     public async Task ExecuteAsync(CommandExecuteContext context, CancellationToken cancellationToken = default)
     {
-        context.Logger.LogInformation($"Receive edit command for a context.Message with id: {context.Message.Id}");
+        context.Logger.LogInformation($"Receive edit command for a message with id: {context.Message.Id}");
 
         if (context.Message.ReplyToMessage is not { } replyToMessage)
         {
