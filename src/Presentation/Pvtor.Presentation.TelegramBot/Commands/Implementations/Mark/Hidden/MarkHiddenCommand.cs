@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
+using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
@@ -22,9 +24,24 @@ public class MarkHiddenCommand : ICommand
             return;
         }
 
+        // NOTE: this works only because note_source_id has dependency on part of primary key (low normal form)
+        NoteCorrelationDto? correlation =
+            (await context.CorrelationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
+            .FirstOrDefault();
+
+        if (correlation is null)
+        {
+            context.Logger.LogError($"Cannot mark hidden as reply message does not have correlation to any chats");
+            await context.Bot.SendMessage(
+                context.Message.Chat.Id,
+                "Cannot mark hidden as reply message does not have correlation to any chats",
+                cancellationToken: cancellationToken);
+            return;
+        }
+
         MarkNoteAsHidden.Response markResponse =
             await context.NoteService.MarkNoteAsHidden(
-                new MarkNoteAsHidden.Request(replyToMessage.Id),
+                new MarkNoteAsHidden.Request(correlation.NoteId),
                 cancellationToken);
 
         switch (markResponse)
