@@ -114,30 +114,33 @@ internal sealed class NoteService : INoteService
         return new MarkNoteAsHidden.Response.Success();
     }
 
-    public async Task<IEnumerable<NoteDto>> GetAllAsync()
-    {
-        return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder => builder.WithIds([]))))
-            .Select(x => x.MapToDto());
-    }
-
-    public async Task<IEnumerable<NoteDto>> GetAllByChannelId(long channelNoteChannelId)
+    public async Task<IEnumerable<NoteDto>> GetNonHiddenAsync()
     {
         return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder =>
-                builder.WithNoteChannelId(new NoteChannelId(channelNoteChannelId)))))
+                builder.WithIds([]).WithOnlyNonHidden(true))))
             .Select(x => x.MapToDto());
     }
 
-    public async Task<IEnumerable<NoteDto>> GetAllByNamespaceId(long? channelNoteNamespaceId)
+    public async Task<IEnumerable<NoteDto>> GetNonHiddenByChannelId(long channelNoteChannelId)
+    {
+        return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder =>
+                builder.WithNoteChannelId(new NoteChannelId(channelNoteChannelId))
+                    .WithOnlyNonHidden(true))))
+            .Select(x => x.MapToDto());
+    }
+
+    public async Task<IEnumerable<NoteDto>> GetNonHiddenByNamespaceId(long? channelNoteNamespaceId)
     {
         if (channelNoteNamespaceId is null)
         {
             return (await _context.NoteRepository.QueryAsync(
-                    NoteQuery.Build(builder => builder.WithUseNullNamespace(true))))
+                    NoteQuery.Build(builder => builder.WithUseNullNamespace(true).WithOnlyNonHidden(true))))
                 .Select(x => x.MapToDto());
         }
 
         return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder =>
-                builder.WithNoteNamespaceId(new NoteNamespaceId(channelNoteNamespaceId.Value)))))
+                builder.WithNoteNamespaceId(new NoteNamespaceId(channelNoteNamespaceId.Value))
+                    .WithOnlyNonHidden(true))))
             .Select(x => x.MapToDto());
     }
 

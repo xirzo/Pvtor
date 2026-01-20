@@ -23,9 +23,9 @@ public interface INoteService
         CancellationToken cancellationToken = default);
 
     // TODO: replace with query
-    Task<IEnumerable<NoteDto>> GetAllAsync();
+    Task<IEnumerable<NoteDto>> GetNonHiddenAsync();
 
-    Task<IEnumerable<NoteDto>> GetAllByChannelId(long channelNoteChannelId);
+    Task<IEnumerable<NoteDto>> GetNonHiddenByChannelId(long channelNoteChannelId);
 
-    Task<IEnumerable<NoteDto>> GetAllByNamespaceId(long? channelNoteNamespaceId);
+    Task<IEnumerable<NoteDto>> GetNonHiddenByNamespaceId(long? channelNoteNamespaceId);
 }

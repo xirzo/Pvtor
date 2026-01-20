@@ -78,7 +78,7 @@ public class RegisterCommand : ICommand
                 context.Logger.LogInformation(
                     $"Successfully registered the chat with id: {message.Chat.Id}");
 
-                var notes = (await context.NoteService.GetAllByNamespaceId(success.Channel.NoteNamespaceId))
+                var notes = (await context.NoteService.GetNonHiddenByNamespaceId(success.Channel.NoteNamespaceId))
                     .ToList();
 
                 foreach (NoteDto note in notes)
