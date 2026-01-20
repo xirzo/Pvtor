@@ -90,14 +90,14 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
             namespaceFilters.Add("note_namespace_id IS NULL");
         }
 
-        if (query.OnlyNonHidden)
-        {
-            namespaceFilters.Add("is_hidden = false");
-        }
-
         if (namespaceFilters.Count > 0)
         {
             whereConditions.Add($"({string.Join(" OR ", namespaceFilters)})");
+        }
+
+        if (query.OnlyNonHidden)
+        {
+            whereConditions.Add("is_hidden = false");
         }
 
         if (query.NoteChannelIds.Length > 0)
