@@ -14,13 +14,13 @@ public class NoteCreator
 {
     private readonly INoteService _noteService;
     private readonly INoteChannelService _channelService;
-    private readonly TelegramBotClient _bot;
+    private readonly ITelegramBotClient _bot;
     private readonly ILogger<NoteCreator> _logger;
 
     public NoteCreator(
         INoteService noteService,
         INoteChannelService channelService,
-        TelegramBotClient bot,
+        ITelegramBotClient bot,
         ILogger<NoteCreator> logger)
     {
         _noteService = noteService;

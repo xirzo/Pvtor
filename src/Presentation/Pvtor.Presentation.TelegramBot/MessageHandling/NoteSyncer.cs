@@ -12,18 +12,18 @@ using Telegram.Bot.Types;
 
 namespace Pvtor.Presentation.TelegramBot.MessageHandling;
 
-public class NoteSyncService : INoteChangedSubscriber
+public class NoteSyncer : INoteChangedSubscriber
 {
     private readonly INoteCorrelationService _correlationService;
     private readonly INoteChannelService _channelService;
-    private readonly TelegramBotClient _bot;
-    private readonly ILogger<NoteSyncService> _logger;
+    private readonly ITelegramBotClient _bot;
+    private readonly ILogger<NoteSyncer> _logger;
 
-    public NoteSyncService(
+    public NoteSyncer(
         INoteCorrelationService correlationService,
         INoteChannelService channelService,
-        TelegramBotClient bot,
-        ILogger<NoteSyncService> logger)
+        ITelegramBotClient bot,
+        ILogger<NoteSyncer> logger)
     {
         _correlationService = correlationService;
         _channelService = channelService;

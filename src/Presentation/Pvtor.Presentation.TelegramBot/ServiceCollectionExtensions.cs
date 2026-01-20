@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Pvtor.Application.Contracts.Notes;
 using Pvtor.Presentation.TelegramBot.MessageHandling;
 using Pvtor.Presentation.TelegramBot.Parsing;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Edit;
@@ -39,10 +40,11 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(argParser);
 
         services.AddSingleton<MessageHandler>();
-        services.AddSingleton<NoteSyncService>();
+        services.AddSingleton<NoteSyncer>();
         services.AddSingleton<CommandProcessor>();
         services.AddSingleton<BotUpdateHandler>();
         services.AddSingleton<NoteCreator>();
+        services.AddSingleton<INoteChangedSubscriber, NoteSyncer>();
         services.AddHostedService<BotBackgroundService>();
 
         return services;

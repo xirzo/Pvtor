@@ -10,13 +10,13 @@ public class MessageHandler
 {
     private readonly ILogger<MessageHandler> _logger;
     private readonly CommandProcessor _commandProcessor;
-    private readonly TelegramBotClient _bot;
+    private readonly ITelegramBotClient _bot;
     private readonly NoteCreator _noteCreator;
 
     public MessageHandler(
         ILogger<MessageHandler> logger,
         CommandProcessor commandProcessor,
-        TelegramBotClient bot,
+        ITelegramBotClient bot,
         NoteCreator noteCreator)
     {
         _logger = logger;
