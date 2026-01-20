@@ -10,4 +10,5 @@ public sealed partial record NoteQuery(
     NoteId[] Ids,
     NoteNamespaceId[] NoteNamespaceIds,
     NoteChannelId[] NoteChannelIds,
-    bool UseNullNamespace);
+    bool UseNullNamespace,
+    bool OnlyNonHidden);

@@ -31,7 +31,7 @@ public class NoteSyncer : INoteChangedSubscriber
         _logger = logger;
     }
 
-    public async Task OnNoteChanged(NoteDto note)
+    public async Task OnNoteChanged(NoteDto note, CancellationToken cancellationToken)
     {
         _logger.LogInformation($"Note with id {note.NoteId} was changed, syncing telegram...");
 
@@ -50,15 +50,19 @@ public class NoteSyncer : INoteChangedSubscriber
 
             if (correlationMap.TryGetValue(chat.NoteChannelId, out NoteCorrelationDto? correlation))
             {
-                await UpdateMessageAsync(chat, correlation, note);
+                await UpdateMessageAsync(chat, correlation, note, cancellationToken);
                 continue;
             }
 
-            await SendMessageAsync(chat, note);
+            await SendMessageAsync(chat, note, cancellationToken);
         }
     }
 
-    private async Task UpdateMessageAsync(NoteChannelDto chat, NoteCorrelationDto correlation, NoteDto note)
+    private async Task UpdateMessageAsync(
+        NoteChannelDto chat,
+        NoteCorrelationDto correlation,
+        NoteDto note,
+        CancellationToken cancellationToken)
     {
         if (!int.TryParse(correlation.NoteSourceId, out int messageId))
         {
@@ -67,12 +71,28 @@ public class NoteSyncer : INoteChangedSubscriber
             return;
         }
 
+        if (note.IsHidden)
+        {
+            _logger.LogInformation($"Note with id: {note.NoteId} is hidden, deleting message and correlation");
+            await _bot.DeleteMessage(
+                new ChatId(chat.NoteSourceChannelId),
+                messageId,
+                cancellationToken: cancellationToken);
+            await _correlationService.DeleteAsync(
+                new DeleteCorrelation.Request(
+                    correlation.NoteSourceId,
+                    correlation.NoteChannelId),
+                cancellationToken);
+            return;
+        }
+
         try
         {
             await _bot.EditMessageText(
                 new ChatId(chat.NoteSourceChannelId),
                 messageId,
-                note.Content);
+                note.Content,
+                cancellationToken: cancellationToken);
             _logger.LogInformation($"Edited message in the chat with id: {chat.NoteSourceChannelId}");
         }
         catch (Exception ex)
@@ -81,14 +101,17 @@ public class NoteSyncer : INoteChangedSubscriber
         }
     }
 
-    private async Task SendMessageAsync(NoteChannelDto chat, NoteDto note)
+    private async Task SendMessageAsync(NoteChannelDto chat, NoteDto note, CancellationToken cancellationToken)
     {
         try
         {
-            Message message = await _bot.SendMessage(new ChatId(chat.NoteSourceChannelId), note.Content);
+            Message message = await _bot.SendMessage(
+                new ChatId(chat.NoteSourceChannelId),
+                note.Content,
+                cancellationToken: cancellationToken);
             _logger.LogInformation($"Sent message to chat with id: {chat.NoteSourceChannelId}");
 
-            await RecordCorrelation(message, note.NoteId, chat.NoteChannelId);
+            await RecordCorrelation(message, note.NoteId, chat.NoteChannelId, cancellationToken);
         }
         catch (Exception ex)
         {

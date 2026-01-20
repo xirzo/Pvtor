@@ -36,14 +36,14 @@ internal sealed class NoteService : INoteService
                 : new NoteNamespaceId(request.NamespaceId.Value);
 
             Note note = await _context.NoteRepository.AddAsync(
-                new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow, noteNamespace),
+                new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow, noteNamespace, false),
                 cancellationToken);
 
             NoteDto noteDto = note.MapToDto();
 
             foreach (INoteChangedSubscriber subscriber in _subscribers)
             {
-                await subscriber.OnNoteChanged(noteDto);
+                await subscriber.OnNoteChanged(noteDto, cancellationToken);
             }
 
             return new CreateNote.Response.Success(noteDto);
@@ -54,7 +54,7 @@ internal sealed class NoteService : INoteService
         }
     }
 
-    public async Task<UpdateNote.Response> UpdateNodeAsync(
+    public async Task<UpdateNote.Response> UpdateNoteAsync(
         UpdateNote.Request request,
         CancellationToken cancellationToken = default)
     {
@@ -75,7 +75,7 @@ internal sealed class NoteService : INoteService
 
         foreach (INoteChangedSubscriber subscriber in _subscribers)
         {
-            await subscriber.OnNoteChanged(noteDto);
+            await subscriber.OnNoteChanged(noteDto, cancellationToken);
         }
 
         return new UpdateNote.Response.Success(noteDto);
@@ -85,6 +85,33 @@ internal sealed class NoteService : INoteService
     {
         _subscribers.Add(subscriber);
         return new Subscription(this, subscriber);
+    }
+
+    public async Task<MarkNoteAsHidden.Response> MarkNoteAsHidden(
+        MarkNoteAsHidden.Request request,
+        CancellationToken cancellationToken = default)
+    {
+        Note? note = (await _context.NoteRepository.QueryAsync(
+            NoteQuery.Build(builder =>
+                builder.WithId(new NoteId(request.NoteId))),
+            cancellationToken)).SingleOrDefault();
+
+        if (note is null)
+        {
+            return new MarkNoteAsHidden.Response.NotFound($"Note with id: {request.NoteId} is not found");
+        }
+
+        Note updatedNote =
+            await _context.NoteRepository.UpdateAsync(note with { IsHidden = true }, cancellationToken);
+
+        NoteDto noteDto = updatedNote.MapToDto();
+
+        foreach (INoteChangedSubscriber subscriber in _subscribers)
+        {
+            await subscriber.OnNoteChanged(noteDto, cancellationToken);
+        }
+
+        return new MarkNoteAsHidden.Response.Success();
     }
 
     public async Task<IEnumerable<NoteDto>> GetAllAsync()

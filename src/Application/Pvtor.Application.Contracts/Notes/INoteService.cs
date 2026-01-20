@@ -12,11 +12,15 @@ public interface INoteService
         CreateNote.Request request,
         CancellationToken cancellationToken = default);
 
-    Task<UpdateNote.Response> UpdateNodeAsync(
+    Task<UpdateNote.Response> UpdateNoteAsync(
         UpdateNote.Request request,
         CancellationToken cancellationToken = default);
 
     INoteChangeSubscription AddSubscriber(INoteChangedSubscriber subscriber);
+
+    Task<MarkNoteAsHidden.Response> MarkNoteAsHidden(
+        MarkNoteAsHidden.Request request,
+        CancellationToken cancellationToken = default);
 
     // TODO: replace with query
     Task<IEnumerable<NoteDto>> GetAllAsync();

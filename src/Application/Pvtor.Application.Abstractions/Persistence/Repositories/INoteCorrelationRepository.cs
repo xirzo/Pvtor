@@ -13,4 +13,6 @@ public interface INoteCorrelationRepository
     Task<IEnumerable<NoteCorrelation>> QueryAsync(
         NoteCorrelationQuery query,
         CancellationToken cancellationToken = default);
+
+    Task DeleteAsync(NoteCorrelationId correlationId, CancellationToken cancellationToken = default);
 }

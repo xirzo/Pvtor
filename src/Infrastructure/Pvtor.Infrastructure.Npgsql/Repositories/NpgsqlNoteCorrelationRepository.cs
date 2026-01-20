@@ -96,6 +96,26 @@ public class NpgsqlNoteCorrelationRepository : INoteCorrelationRepository
         return correlations;
     }
 
+    public async Task DeleteAsync(NoteCorrelationId correlationId, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+
+        await connection.OpenAsync(cancellationToken);
+
+        await using NpgsqlCommand command = connection.CreateCommand();
+
+        command.CommandText = """
+                                DELETE FROM notes_correlations
+                                WHERE note_source_id = @note_source_id
+                                AND note_channel_id = @note_channel_id
+                              """;
+
+        command.Parameters.AddWithValue("@note_source_id", correlationId.NoteSourceId.Value);
+        command.Parameters.AddWithValue("@note_channel_id", correlationId.NoteChannelId.Value);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private NoteCorrelation MapNoteCorrelationFromReader(NpgsqlDataReader reader)
     {
         return new NoteCorrelation(

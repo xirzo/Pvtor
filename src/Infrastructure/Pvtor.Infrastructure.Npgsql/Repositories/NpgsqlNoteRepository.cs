@@ -38,9 +38,8 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         command.Parameters.AddWithValue("@creation_date", note.CreationDate);
         command.Parameters.AddWithValue("@update_date", note.UpdateDate);
 
-        // Handle Nullable Namespace ID for writing
         object noteNamespaceId = note.NoteNamespaceId.HasValue
-            ? note.NoteNamespaceId.Value.Value // Access the long value inside the struct
+            ? note.NoteNamespaceId.Value.Value
             : DBNull.Value;
 
         command.Parameters.AddWithValue("@note_namespace_id", noteNamespaceId);
@@ -48,7 +47,13 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         long noteId = (long)(await command.ExecuteScalarAsync(cancellationToken)
                              ?? throw new InvalidOperationException("Failed to get note id from insertion"));
 
-        return new Note(new NoteId(noteId), note.Content, note.CreationDate, note.UpdateDate, note.NoteNamespaceId);
+        return new Note(
+            new NoteId(noteId),
+            note.Content,
+            note.CreationDate,
+            note.UpdateDate,
+            note.NoteNamespaceId,
+            note.IsHidden);
     }
 
     public async Task<IEnumerable<Note>> QueryAsync(NoteQuery query, CancellationToken cancellationToken = default)
@@ -59,7 +64,8 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         var whereConditions = new List<string>();
         var parameters = new List<NpgsqlParameter>();
         var commandText =
-            new StringBuilder("SELECT note_id, content, creation_date, update_date, note_namespace_id FROM notes");
+            new StringBuilder(
+                "SELECT note_id, content, creation_date, update_date, note_namespace_id, is_hidden FROM notes");
 
         if (query.Ids.Length > 0)
         {
@@ -82,6 +88,11 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         if (query.UseNullNamespace)
         {
             namespaceFilters.Add("note_namespace_id IS NULL");
+        }
+
+        if (query.OnlyNonHidden)
+        {
+            namespaceFilters.Add("is_hidden = false");
         }
 
         if (namespaceFilters.Count > 0)
@@ -132,7 +143,7 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
 
         command.CommandText = """
                               UPDATE notes 
-                              SET content = @content, update_date = @update_date, note_namespace_id = @note_namespace_id
+                              SET content = @content, update_date = @update_date, note_namespace_id = @note_namespace_id, is_hidden = @is_hidden
                               WHERE note_id = @note_id;
                               """;
 
@@ -144,6 +155,7 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
             : DBNull.Value;
 
         command.Parameters.AddWithValue("@note_namespace_id", noteNamespaceId);
+        command.Parameters.AddWithValue("@is_hidden", note.IsHidden);
         command.Parameters.AddWithValue("@note_id", note.NoteId.Value);
 
         int rowsAffected = await command.ExecuteNonQueryAsync(cancellationToken);
@@ -167,6 +179,7 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
             reader.GetString(1),
             reader.GetDateTime(2),
             reader.GetDateTime(3),
-            namespaceId);
+            namespaceId,
+            reader.GetBoolean(5));
     }
 }

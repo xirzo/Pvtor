@@ -10,13 +10,15 @@ public sealed record Note
         string content,
         DateTime creationDate,
         DateTime updateDate,
-        NoteNamespaceId? noteNamespaceId)
+        NoteNamespaceId? noteNamespaceId,
+        bool isHidden)
     {
         NoteId = noteId;
         Content = content;
         CreationDate = creationDate;
         UpdateDate = updateDate;
         NoteNamespaceId = noteNamespaceId;
+        IsHidden = isHidden;
     }
 
     public NoteId NoteId { get; }
@@ -28,4 +30,6 @@ public sealed record Note
     public DateTime UpdateDate { get; }
 
     public NoteNamespaceId? NoteNamespaceId { get; }
+
+    public bool IsHidden { get; init; }
 }

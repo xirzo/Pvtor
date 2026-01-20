@@ -17,10 +17,6 @@ namespace Pvtor.Application.Services;
 
 public class NoteCorrelationService : INoteCorrelationService
 {
-    // NOTE: for now that's just a placeholder,
-    // later on add some sort of channels/chats
-    // on frontend and pass them to endpoint.
-    // private const string ChannelSourceIdPlaceholder = "REST";
     private readonly IPersistanceContext _context;
 
     public NoteCorrelationService(IPersistanceContext context)
@@ -48,6 +44,26 @@ public class NoteCorrelationService : INoteCorrelationService
         catch (Exception ex)
         {
             return new RecordCorrelation.Response.PersistenceFailure(ex.Message);
+        }
+    }
+
+    public async Task<DeleteCorrelation.Response> DeleteAsync(
+        DeleteCorrelation.Request request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var correlationId =
+                new NoteCorrelationId(
+                    new NoteSourceId(request.CorrelationNoteSourceId),
+                    new NoteChannelId(request.CorrelationNoteChannelId));
+
+            await _context.NoteCorrelationRepository.DeleteAsync(correlationId);
+            return new DeleteCorrelation.Response.Success();
+        }
+        catch (Exception ex)
+        {
+            return new DeleteCorrelation.Response.PersistenceFailure(ex.Message);
         }
     }
 
