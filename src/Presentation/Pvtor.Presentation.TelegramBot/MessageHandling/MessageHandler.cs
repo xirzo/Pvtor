@@ -41,6 +41,7 @@ public class MessageHandler
             _logger.LogInformation(
                 $"Deleted user message with id: {message.Id} in chat with id: {message.Chat.Id}");
             await _commandProcessor.TryExecuteAsync(message, cancellationToken);
+            return;
         }
 
         await _noteCreator.CreateFromMessageAsync(message, cancellationToken);
