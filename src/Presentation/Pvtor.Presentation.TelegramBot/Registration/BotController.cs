@@ -1,12 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Pvtor.Presentation.TelegramBot.MessageHandling;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 
-namespace Pvtor.Presentation.TelegramBot;
+namespace Pvtor.Presentation.TelegramBot.Registration;
 
 [ApiController]
 [Route("api/telegram")]

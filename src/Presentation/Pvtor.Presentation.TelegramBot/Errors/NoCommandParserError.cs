@@ -1,6 +1,4 @@
-﻿using Pvtor.Presentation.TelegramBot.Errors;
-
-namespace Pvtor.Presentation.TelegramBot;
+﻿namespace Pvtor.Presentation.TelegramBot.Errors;
 
 public class NoCommandParserError : IParseError
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Pvtor.Presentation.TelegramBot;
+namespace Pvtor.Presentation.TelegramBot.Registration;
 
 public class BotOptions
 {

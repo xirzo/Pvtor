@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot;
 
-namespace Pvtor.Presentation.TelegramBot;
+namespace Pvtor.Presentation.TelegramBot.Registration;
 
 public class BotBackgroundService : BackgroundService
 {

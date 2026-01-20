@@ -1,4 +1,5 @@
 ﻿using Pvtor.Presentation.TelegramBot.Commands.Implementations.Register;
+using Pvtor.Presentation.TelegramBot.Errors;
 using Pvtor.Presentation.TelegramBot.Parsing.Results;
 using System.Collections.Generic;
 
