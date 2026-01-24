@@ -18,11 +18,15 @@ public class DeleteCommand : ICommand
             return;
         }
 
-        var correlations =
+        // FIX: this actually always returns one message (reply to message will always have one correlation:
+        // correlation to the chat it is in
+        var replyMessageCorrelation =
             (await context.CorrelationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
-            .ToList();
+            .Single();
 
-        var noteId = correlations[0].NoteId;
+        var noteId = replyMessageCorrelation.NoteId;
+
+        var correlations = await context.CorrelationService.FindByNoteIdAsync(noteId);
 
         foreach (NoteCorrelationDto correlation in correlations)
         {
