@@ -168,6 +168,24 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         return note;
     }
 
+    public async Task DeleteAsync(NoteId noteId, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new NpgsqlConnection(_connectionString);
+
+        await connection.OpenAsync(cancellationToken);
+
+        await using NpgsqlCommand command = connection.CreateCommand();
+
+        command.CommandText = """
+                                DELETE FROM notes
+                                WHERE note_id = @note_id
+                              """;
+
+        command.Parameters.AddWithValue("@note_id", noteId.Value);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     private Note MapNoteFromReader(NpgsqlDataReader reader)
     {
         NoteNamespaceId? namespaceId = reader.IsDBNull(4)

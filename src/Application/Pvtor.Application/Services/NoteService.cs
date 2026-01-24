@@ -144,6 +144,19 @@ internal sealed class NoteService : INoteService
             .Select(x => x.MapToDto());
     }
 
+    public async Task<DeleteNote.Response> DeleteAsync(long noteId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await _context.NoteRepository.DeleteAsync(new NoteId(noteId), cancellationToken);
+            return new DeleteNote.Response.Success();
+        }
+        catch (Exception ex)
+        {
+            return new DeleteNote.Response.PersistenceFailure(ex.Message);
+        }
+    }
+
     private class Subscription(NoteService service, INoteChangedSubscriber subscriber) : INoteChangeSubscription
     {
         public void Unsubscribe()

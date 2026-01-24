@@ -58,7 +58,7 @@ public class NoteCorrelationService : INoteCorrelationService
                     new NoteSourceId(request.CorrelationNoteSourceId),
                     new NoteChannelId(request.CorrelationNoteChannelId));
 
-            await _context.NoteCorrelationRepository.DeleteAsync(correlationId);
+            await _context.NoteCorrelationRepository.DeleteAsync(correlationId, cancellationToken);
             return new DeleteCorrelation.Response.Success();
         }
         catch (Exception ex)

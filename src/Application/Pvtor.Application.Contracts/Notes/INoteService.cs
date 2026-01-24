@@ -28,4 +28,6 @@ public interface INoteService
     Task<IEnumerable<NoteDto>> GetNonHiddenByChannelId(long channelNoteChannelId);
 
     Task<IEnumerable<NoteDto>> GetNonHiddenByNamespaceId(long? channelNoteNamespaceId);
+
+    Task<DeleteNote.Response> DeleteAsync(long noteId, CancellationToken cancellationToken = default);
 }
