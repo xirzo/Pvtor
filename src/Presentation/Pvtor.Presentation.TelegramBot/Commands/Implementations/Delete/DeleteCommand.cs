@@ -29,14 +29,18 @@ public class DeleteCommand : ICommand
             try
             {
                 var noteSourceId = Convert.ToInt32(correlation.NoteSourceId);
-                await context.Bot.DeleteMessage(correlation.NoteChannelId, noteSourceId, cancellationToken);
+
+                // TODO: rewrite with clear method for finding concrete
+                NoteChannelDto channel = (await context.ChannelService.GetAllAsync())
+                    .Single(x => x.NoteChannelId == correlation.NoteChannelId);
+
+                await context.Bot.DeleteMessage(channel.NoteSourceChannelId, noteSourceId, cancellationToken);
             }
             catch (Exception ex)
             {
                 context.Logger.LogError(
-                    "Failed to delete message {MessageId} in chat {ChatId}: {ErrorMessage}",
-                    context.Message.Id,
-                    context.Message.Chat.Id,
+                    "Failed to delete message {MessageId} in chat: {ErrorMessage}",
+                    correlation.NoteSourceId,
                     ex.Message);
                 continue;
             }
