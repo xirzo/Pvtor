@@ -12,8 +12,4 @@
       <ProjectReference Include="..\..\Application\Pvtor.Application.Contracts\Pvtor.Application.Contracts.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Parsing\Parsers\Implementations\Delete\" />
-    </ItemGroup>
-
 </Project>

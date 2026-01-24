@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Pvtor.Application.Contracts.Notes;
 using Pvtor.Presentation.TelegramBot.MessageHandling;
 using Pvtor.Presentation.TelegramBot.Parsing;
+using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Delete;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Edit;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Mark;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Mark.Hidden;
@@ -40,7 +41,8 @@ public static class ServiceCollectionExtensions
             .AddNext(new UnregisterCommandParser())
             .AddNext(new EditCommandParser(new EditCommandContentParser()))
             .AddNext(new MarkParser(new MarkHiddenParser()))
-            .AddNext(new StatusCommandParser()));
+            .AddNext(new StatusCommandParser())
+            .AddNext(new DeleteCommandParser()));
 
         services.AddSingleton(argParser);
 
