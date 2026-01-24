@@ -13,13 +13,13 @@ public class DeleteCommand : ICommand
 {
     public async Task ExecuteAsync(CommandExecuteContext context, CancellationToken cancellationToken = default)
     {
-        if (context.Message.ReplyToMessage is null)
+        if (context.Message.ReplyToMessage is not { } replyToMessage)
         {
             return;
         }
 
         var correlations =
-            (await context.CorrelationService.FindBySourceIdAsync(context.Message.ReplyToMessage.Id.ToString()))
+            (await context.CorrelationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
             .ToList();
 
         var noteId = correlations[0].NoteId;
@@ -28,7 +28,8 @@ public class DeleteCommand : ICommand
         {
             try
             {
-                await context.Bot.DeleteMessage(context.Message.Chat.Id, context.Message.Id, cancellationToken);
+                var noteSourceId = Convert.ToInt32(correlation.NoteSourceId);
+                await context.Bot.DeleteMessage(correlation.NoteChannelId, noteSourceId, cancellationToken);
             }
             catch (Exception ex)
             {
