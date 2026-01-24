@@ -22,23 +22,7 @@ public class DeleteCommand : ICommand
             (await context.CorrelationService.FindBySourceIdAsync(context.Message.ReplyToMessage.Id.ToString()))
             .ToList();
 
-        DeleteNote.Response noteResponse =
-            await context.NoteService.DeleteAsync(correlations[0].NoteId, cancellationToken);
-
-        switch (noteResponse)
-        {
-            case DeleteNote.Response.PersistenceFailure persistenceFailure:
-                context.Logger.LogError(
-                    "Delete persistence failure for note ID {NoteId}: {ErrorMessage}",
-                    correlations[0].NoteId,
-                    persistenceFailure.Message);
-                break;
-            case DeleteNote.Response.Success:
-                context.Logger.LogInformation(
-                    "Successfully deleted note ID {NoteId}",
-                    correlations[0].NoteId);
-                break;
-        }
+        var noteId = correlations[0].NoteId;
 
         foreach (NoteCorrelationDto correlation in correlations)
         {
@@ -56,7 +40,6 @@ public class DeleteCommand : ICommand
                 continue;
             }
 
-            // NOTE: maybe not needed as correlations is cascade deleted on note deletion
             DeleteCorrelation.Response correlationResponse = await context.CorrelationService.DeleteAsync(
                 new DeleteCorrelation.Request(correlation.NoteSourceId, correlation.NoteChannelId),
                 cancellationToken);
@@ -77,6 +60,24 @@ public class DeleteCommand : ICommand
                         correlation.NoteChannelId);
                     break;
             }
+        }
+
+        DeleteNote.Response noteResponse =
+            await context.NoteService.DeleteAsync(noteId, cancellationToken);
+
+        switch (noteResponse)
+        {
+            case DeleteNote.Response.PersistenceFailure persistenceFailure:
+                context.Logger.LogError(
+                    "Delete persistence failure for note ID {NoteId}: {ErrorMessage}",
+                    noteId,
+                    persistenceFailure.Message);
+                break;
+            case DeleteNote.Response.Success:
+                context.Logger.LogInformation(
+                    "Successfully deleted note ID {NoteId}",
+                    noteId);
+                break;
         }
     }
 }
