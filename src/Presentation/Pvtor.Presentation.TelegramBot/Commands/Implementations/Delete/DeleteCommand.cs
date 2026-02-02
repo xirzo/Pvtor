@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,19 +21,19 @@ public class DeleteCommand : ICommand
 
         // FIX: this actually always returns one message (reply to message will always have one correlation:
         // correlation to the chat it is in
-        var replyMessageCorrelation =
+        NoteCorrelationDto replyMessageCorrelation =
             (await context.CorrelationService.FindBySourceIdAsync(replyToMessage.Id.ToString()))
             .Single();
 
-        var noteId = replyMessageCorrelation.NoteId;
+        long noteId = replyMessageCorrelation.NoteId;
 
-        var correlations = await context.CorrelationService.FindByNoteIdAsync(noteId);
+        IEnumerable<NoteCorrelationDto> correlations = await context.CorrelationService.FindByNoteIdAsync(noteId);
 
         foreach (NoteCorrelationDto correlation in correlations)
         {
             try
             {
-                var noteSourceId = Convert.ToInt32(correlation.NoteSourceId);
+                int noteSourceId = Convert.ToInt32(correlation.NoteSourceId);
 
                 // TODO: rewrite with clear method for finding concrete
                 NoteChannelDto channel = (await context.ChannelService.GetAllAsync())
