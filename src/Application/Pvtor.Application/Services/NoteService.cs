@@ -114,10 +114,12 @@ internal sealed class NoteService : INoteService
         return new MarkNoteAsHidden.Response.Success();
     }
 
-    public async Task<IEnumerable<NoteDto>> GetNonHiddenAsync()
+    public async Task<IEnumerable<NoteDto>> GetNonHiddenAsync(CancellationToken cancellationToken)
     {
-        return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder =>
-                builder.WithIds([]).WithOnlyNonHidden(true))))
+        return (await _context.NoteRepository.QueryAsync(
+            NoteQuery.Build(builder =>
+                builder.WithIds([]).WithOnlyNonHidden(true)),
+            cancellationToken))
             .Select(x => x.MapToDto());
     }
 

@@ -23,7 +23,7 @@ public interface INoteService
         CancellationToken cancellationToken = default);
 
     // TODO: replace with query
-    Task<IEnumerable<NoteDto>> GetNonHiddenAsync();
+    Task<IEnumerable<NoteDto>> GetNonHiddenAsync(CancellationToken cancellationToken);
 
     Task<IEnumerable<NoteDto>> GetNonHiddenByChannelId(long channelNoteChannelId);
 
