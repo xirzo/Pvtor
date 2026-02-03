@@ -1,7 +1,6 @@
 ﻿using Pvtor.Application;
 using Pvtor.Infrastructure.Npgsql;
 using Pvtor.Presentation.TelegramBot;
-using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -20,11 +19,10 @@ builder.Services
 
 WebApplication app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    // app.MapOpenApi();
-    app.MapScalarApiReference();
-}
-
+// if (app.Environment.IsDevelopment())
+// {
+//     app.MapOpenApi();
+//     app.MapScalarApiReference();
+// }
 app.MapControllers();
 await app.RunAsync();

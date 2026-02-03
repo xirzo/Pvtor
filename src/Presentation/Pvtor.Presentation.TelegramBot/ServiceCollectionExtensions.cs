@@ -8,7 +8,6 @@ using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Delete;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Edit;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Mark;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Mark.Hidden;
-using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Register;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Status;
 using Pvtor.Presentation.TelegramBot.Parsing.Parsers.Implementations.Unregister;
 using Pvtor.Presentation.TelegramBot.Registration;
@@ -37,8 +36,8 @@ public static class ServiceCollectionExtensions
             return new TelegramBotClient(botOptions.BotToken);
         });
 
-        var argParser = new ArgParser(new RegisterCommandParser(new RegisterNamespaceParser())
-            .AddNext(new UnregisterCommandParser())
+        // new RegisterCommandParser(new RegisterNamespaceParser())
+        var argParser = new ArgParser(new UnregisterCommandParser()
             .AddNext(new EditCommandParser(new EditCommandContentParser()))
             .AddNext(new MarkParser(new MarkHiddenParser()))
             .AddNext(new StatusCommandParser())
