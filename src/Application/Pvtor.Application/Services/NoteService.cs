@@ -36,7 +36,14 @@ internal sealed class NoteService : INoteService
                 : new NoteNamespaceId(request.NamespaceId.Value);
 
             Note note = await _context.NoteRepository.AddAsync(
-                new Note(NoteId.Default, request.Name, request.Content, DateTime.UtcNow, DateTime.UtcNow, noteNamespace, false),
+                new Note(
+                    NoteId.Default,
+                    request.Name,
+                    request.Content,
+                    DateTime.UtcNow,
+                    DateTime.UtcNow,
+                    noteNamespace,
+                    false),
                 cancellationToken);
 
             NoteDto noteDto = note.MapToDto();
@@ -114,12 +121,32 @@ internal sealed class NoteService : INoteService
         return new MarkNoteAsHidden.Response.Success();
     }
 
+    public async Task<IEnumerable<NoteDto>> QueryAsync(NoteDtoQuery query, CancellationToken cancellationToken)
+    {
+        NoteId[] noteIds = query.NoteIds
+            .Select(id => new NoteId(id))
+            .ToArray();
+
+        NoteNamespaceId[] namespaceIds = query.NoteIds
+            .Select(id => new NoteNamespaceId(id))
+            .ToArray();
+
+        return (await _context.NoteRepository.QueryAsync(
+                NoteQuery.Build(builder =>
+                    builder
+                        .WithIds(noteIds)
+                        .WithNoteNamespaceIds(namespaceIds)
+                        .WithOnlyNonHidden(query.OnlyNonHidden)),
+                cancellationToken))
+            .Select(x => x.MapToDto());
+    }
+
     public async Task<IEnumerable<NoteDto>> GetNonHiddenAsync(CancellationToken cancellationToken)
     {
         return (await _context.NoteRepository.QueryAsync(
-            NoteQuery.Build(builder =>
-                builder.WithIds([]).WithOnlyNonHidden(true)),
-            cancellationToken))
+                NoteQuery.Build(builder =>
+                    builder.WithIds([]).WithOnlyNonHidden(true)),
+                cancellationToken))
             .Select(x => x.MapToDto());
     }
 

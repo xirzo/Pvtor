@@ -3,6 +3,8 @@ using Pvtor.Application.Contracts.Notes;
 using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Presentation.Http.Models;
+using Pvtor.Presentation.Http.Parameters;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,5 +36,23 @@ public class NoteController : ControllerBase
             CreateNote.Response.Success success => Ok(success.Note),
             _ => throw new UnreachableException(),
         };
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<NoteDto>> QueryNotesAsync(
+        [FromQuery] QueryNotesParameters? parameters,
+        CancellationToken cancellationToken = default)
+    {
+        QueryNotesParameters safeParameters = parameters ?? new QueryNotesParameters();
+
+        IEnumerable<NoteDto> response = await _noteService.QueryAsync(
+            NoteDtoQuery.Build(builder =>
+                builder
+                    .WithIds(safeParameters.NoteIds)
+                    .WithNamespaceIds(safeParameters.NamespaceIds)
+                    .OnlyNonHidden(safeParameters.OnlyNonHidden)),
+            cancellationToken);
+
+        return Ok(response);
     }
 }
