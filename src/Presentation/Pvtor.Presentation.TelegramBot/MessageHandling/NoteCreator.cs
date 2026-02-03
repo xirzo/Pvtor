@@ -48,7 +48,7 @@ public class NoteCreator
         }
 
         CreateNote.Response createResponse = await _noteService.CreateNoteAsync(
-            new CreateNote.Request(messageText, currentChannel.NoteNamespaceId),
+            new CreateNote.Request(messageText, NamespaceId: currentChannel.NoteNamespaceId),
             cancellationToken);
 
         switch (createResponse)

@@ -7,6 +7,7 @@ public sealed record Note
 {
     public Note(
         NoteId noteId,
+        string? name,
         string content,
         DateTime creationDate,
         DateTime updateDate,
@@ -14,6 +15,7 @@ public sealed record Note
         bool isHidden)
     {
         NoteId = noteId;
+        Name = name;
         Content = content;
         CreationDate = creationDate;
         UpdateDate = updateDate;
@@ -22,6 +24,8 @@ public sealed record Note
     }
 
     public NoteId NoteId { get; }
+
+    public string? Name { get; }
 
     public string Content { get; init; }
 

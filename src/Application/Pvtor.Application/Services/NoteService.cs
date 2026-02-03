@@ -36,7 +36,7 @@ internal sealed class NoteService : INoteService
                 : new NoteNamespaceId(request.NamespaceId.Value);
 
             Note note = await _context.NoteRepository.AddAsync(
-                new Note(NoteId.Default, request.Content, DateTime.UtcNow, DateTime.UtcNow, noteNamespace, false),
+                new Note(NoteId.Default, request.Name, request.Content, DateTime.UtcNow, DateTime.UtcNow, noteNamespace, false),
                 cancellationToken);
 
             NoteDto noteDto = note.MapToDto();

@@ -29,14 +29,20 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         await using NpgsqlCommand command = connection.CreateCommand();
 
         command.CommandText = """
-                              INSERT INTO notes (content, creation_date, update_date, note_namespace_id)
-                              VALUES (@content, @creation_date, @update_date, @note_namespace_id)
+                              INSERT INTO notes (content, creation_date, update_date, note_namespace_id, name)
+                              VALUES (@content, @creation_date, @update_date, @note_namespace_id, @name)
                               RETURNING note_id;
                               """;
 
         command.Parameters.AddWithValue("@content", note.Content);
         command.Parameters.AddWithValue("@creation_date", note.CreationDate);
         command.Parameters.AddWithValue("@update_date", note.UpdateDate);
+
+        object noteName = note.Name is not null
+            ? note.Name
+            : DBNull.Value;
+
+        command.Parameters.AddWithValue("@name", noteName);
 
         object noteNamespaceId = note.NoteNamespaceId.HasValue
             ? note.NoteNamespaceId.Value.Value
@@ -49,6 +55,7 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
 
         return new Note(
             new NoteId(noteId),
+            note.Name,
             note.Content,
             note.CreationDate,
             note.UpdateDate,
@@ -65,7 +72,7 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
         var parameters = new List<NpgsqlParameter>();
         var commandText =
             new StringBuilder(
-                "SELECT note_id, content, creation_date, update_date, note_namespace_id, is_hidden FROM notes");
+                "SELECT note_id, content, creation_date, update_date, note_namespace_id, is_hidden, name FROM notes");
 
         if (query.Ids.Length > 0)
         {
@@ -192,8 +199,13 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
             ? null
             : new NoteNamespaceId(reader.GetInt64(4));
 
+        string? name = reader.IsDBNull(6)
+            ? null
+            : reader.GetString(6);
+
         return new Note(
             new NoteId(reader.GetInt64(0)),
+            name,
             reader.GetString(1),
             reader.GetDateTime(2),
             reader.GetDateTime(3),

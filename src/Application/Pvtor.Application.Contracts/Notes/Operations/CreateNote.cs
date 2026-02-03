@@ -4,7 +4,7 @@ namespace Pvtor.Application.Contracts.Notes.Operations;
 
 public static class CreateNote
 {
-    public readonly record struct Request(string Content, long? NamespaceId = null);
+    public readonly record struct Request(string Content, string? Name = null, long? NamespaceId = null);
 
     public abstract record Response
     {
