@@ -127,7 +127,7 @@ internal sealed class NoteService : INoteService
             .Select(id => new NoteId(id))
             .ToArray();
 
-        NoteNamespaceId[] namespaceIds = query.NoteIds
+        NoteNamespaceId[] namespaceIds = query.NamespaceIds
             .Select(id => new NoteNamespaceId(id))
             .ToArray();
 
