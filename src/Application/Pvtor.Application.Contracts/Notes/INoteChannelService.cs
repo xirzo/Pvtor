@@ -19,5 +19,6 @@ public interface INoteChannelService
     // TODO: replace with query
     Task<IEnumerable<NoteChannelDto>> GetAllAsync();
 
+    // TODO: replace by query
     Task<NoteChannelDto?> FindBySourceChannelIdAsync(string sourceChatId);
 }

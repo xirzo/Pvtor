@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pvtor.Infrastructure.Npgsql.Repositories;
@@ -44,10 +45,12 @@ public class NpgsqlNoteNamespaceRepository : INoteNamespaceRepository
         throw new InvalidOperationException("Database failed to return the inserted note namespace.");
     }
 
-    public async Task<IEnumerable<NoteNamespace>> QueryAsync(NoteNamespaceQuery query)
+    public async Task<IEnumerable<NoteNamespace>> QueryAsync(
+        NoteNamespaceQuery query,
+        CancellationToken cancellationToken)
     {
         await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
 
         var parameters = new List<NpgsqlParameter>();
         var commandText = new StringBuilder("SELECT note_namespace_id, name, creation_date FROM notes_namespaces");
@@ -80,9 +83,9 @@ public class NpgsqlNoteNamespaceRepository : INoteNamespaceRepository
         command.Parameters.AddRange(parameters.ToArray());
 
         var result = new List<NoteNamespace>();
-        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        while (await reader.ReadAsync())
+        while (await reader.ReadAsync(cancellationToken))
         {
             result.Add(MapFromReader(reader));
         }

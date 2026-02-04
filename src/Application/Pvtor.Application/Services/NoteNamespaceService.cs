@@ -6,7 +6,9 @@ using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes.Namespaces;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pvtor.Application.Services;
@@ -37,10 +39,26 @@ public class NoteNamespaceService : INoteNamespaceService
         }
     }
 
+    // TODO: replace by query
     public async Task<NoteNamespaceDto?> FindByNameAsync(string name)
     {
         return (await _context.NoteNamespaceRepository.QueryAsync(NoteNamespaceQuery.Build(builder =>
                 builder.WithName(name)))).SingleOrDefault()
             ?.MapToDto();
+    }
+
+    public async Task<IEnumerable<NoteNamespaceDto>> QueryAsync(NamespaceDtoQuery query, CancellationToken cancellationToken)
+    {
+        NoteNamespaceId[] namespaceIds = query.NamespaceIds
+            .Select(id => new NoteNamespaceId(id))
+            .ToArray();
+
+        var namespaceQuery = NoteNamespaceQuery.Build(builder => builder
+                .WithNoteNamespaceIds(namespaceIds));
+
+        return (await _context.NoteNamespaceRepository.QueryAsync(
+                namespaceQuery,
+                cancellationToken))
+            .Select(x => x.MapToDto());
     }
 }
