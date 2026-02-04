@@ -127,16 +127,23 @@ internal sealed class NoteService : INoteService
             .Select(id => new NoteId(id))
             .ToArray();
 
+        bool useNullNamespace = query.NamespaceIds
+            .Any(id => id == 0);
+
         NoteNamespaceId[] namespaceIds = query.NamespaceIds
+            .Where(id => id != 0)
             .Select(id => new NoteNamespaceId(id))
             .ToArray();
 
+        var noteQuery = NoteQuery.Build(builder =>
+            builder
+                .WithIds(noteIds)
+                .WithNoteNamespaceIds(namespaceIds)
+                .WithUseNullNamespace(useNullNamespace)
+                .WithOnlyNonHidden(query.OnlyNonHidden));
+
         return (await _context.NoteRepository.QueryAsync(
-                NoteQuery.Build(builder =>
-                    builder
-                        .WithIds(noteIds)
-                        .WithNoteNamespaceIds(namespaceIds)
-                        .WithOnlyNonHidden(query.OnlyNonHidden)),
+                noteQuery,
                 cancellationToken))
             .Select(x => x.MapToDto());
     }
