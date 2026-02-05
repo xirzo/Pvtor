@@ -27,7 +27,7 @@ public class NoteController : ControllerBase
         [FromBody] CreateNoteRequest httpRequest,
         CancellationToken cancellationToken = default)
     {
-        var request = new CreateNote.Request(httpRequest.Content);
+        var request = new CreateNote.Request(httpRequest.Content, httpRequest.Name, httpRequest.NamespaceId);
         CreateNote.Response response = await _noteService.CreateNoteAsync(request, cancellationToken);
 
         return response switch
