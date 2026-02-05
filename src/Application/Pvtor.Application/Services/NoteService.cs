@@ -5,7 +5,6 @@ using Pvtor.Application.Contracts.Notes.Models;
 using Pvtor.Application.Contracts.Notes.Operations;
 using Pvtor.Application.Mapping;
 using Pvtor.Domain.Notes;
-using Pvtor.Domain.Notes.Channels;
 using Pvtor.Domain.Notes.Namespaces;
 using System;
 using System.Collections.Generic;
@@ -145,23 +144,6 @@ internal sealed class NoteService : INoteService
         return (await _context.NoteRepository.QueryAsync(
                 noteQuery,
                 cancellationToken))
-            .Select(x => x.MapToDto());
-    }
-
-    public async Task<IEnumerable<NoteDto>> GetNonHiddenAsync(CancellationToken cancellationToken)
-    {
-        return (await _context.NoteRepository.QueryAsync(
-                NoteQuery.Build(builder =>
-                    builder.WithIds([]).WithOnlyNonHidden(true)),
-                cancellationToken))
-            .Select(x => x.MapToDto());
-    }
-
-    public async Task<IEnumerable<NoteDto>> GetNonHiddenByChannelId(long channelNoteChannelId)
-    {
-        return (await _context.NoteRepository.QueryAsync(NoteQuery.Build(builder =>
-                builder.WithNoteChannelId(new NoteChannelId(channelNoteChannelId))
-                    .WithOnlyNonHidden(true))))
             .Select(x => x.MapToDto());
     }
 

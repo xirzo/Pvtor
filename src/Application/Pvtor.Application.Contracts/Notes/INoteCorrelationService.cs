@@ -16,7 +16,9 @@ public interface INoteCorrelationService
         DeleteCorrelation.Request request,
         CancellationToken cancellationToken = default);
 
+    // TODO: replace by query
     Task<IEnumerable<NoteCorrelationDto>> FindBySourceIdAsync(string noteSourceId);
 
+    // TODO: replace by query
     Task<IEnumerable<NoteCorrelationDto>> FindByNoteIdAsync(long noteId);
 }

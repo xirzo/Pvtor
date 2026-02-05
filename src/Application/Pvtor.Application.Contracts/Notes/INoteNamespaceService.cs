@@ -10,6 +10,7 @@ public interface INoteNamespaceService
 {
     Task<CreateNamespace.Response> CreateAsync(CreateNamespace.Request request);
 
+    // TODO: replace by query
     Task<NoteNamespaceDto?> FindByNameAsync(string name);
 
     Task<IEnumerable<NoteNamespaceDto>> QueryAsync(NamespaceDtoQuery query, CancellationToken cancellationToken);
