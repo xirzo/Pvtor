@@ -50,7 +50,8 @@ public class NoteController : ControllerBase
                 builder
                     .WithIds(safeParameters.NoteIds)
                     .WithNamespaceIds(safeParameters.NamespaceIds)
-                    .OnlyNonHidden(safeParameters.OnlyNonHidden)),
+                    .OnlyNonHidden(safeParameters.OnlyNonHidden)
+                    .WithContent(safeParameters.Content)),
             cancellationToken);
 
         return Ok(response);

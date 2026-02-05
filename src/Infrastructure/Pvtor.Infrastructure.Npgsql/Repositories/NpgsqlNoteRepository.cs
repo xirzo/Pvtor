@@ -118,6 +118,13 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
                 new NpgsqlParameter($"@ch{i}", channelId.Value)));
         }
 
+        if (!string.IsNullOrWhiteSpace(query.Content))
+        {
+            whereConditions.Add(
+                "(tsv_content @@ websearch_to_tsquery('russian', @content) OR tsv_content @@ websearch_to_tsquery('english', @content))");
+            parameters.Add(new NpgsqlParameter("@content", query.Content));
+        }
+
         if (whereConditions.Count > 0)
         {
             commandText.Append(" WHERE ");

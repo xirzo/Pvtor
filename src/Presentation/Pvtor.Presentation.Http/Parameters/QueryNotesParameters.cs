@@ -10,4 +10,6 @@ public class QueryNotesParameters
     public long[] NamespaceIds { get; set; } = [];
 
     public bool OnlyNonHidden { get; set; }
+
+    public string Content { get; set; } = string.Empty;
 }

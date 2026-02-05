@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Pvtor.Application.Contracts.Notes.Models;
 
-public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, bool OnlyNonHidden)
+public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, string Content, bool OnlyNonHidden)
 {
     public static NoteDtoQuery Build(Func<Builder, Builder> action)
     {
@@ -15,6 +15,7 @@ public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, bool Only
         private readonly List<long> _ids = [];
         private readonly List<long> _namespaceIds = [];
         private bool _onlyNonHidden = true;
+        private string _content = string.Empty;
 
         public Builder WithId(long id)
         {
@@ -40,6 +41,12 @@ public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, bool Only
             return this;
         }
 
+        public Builder WithContent(string content)
+        {
+            _content = content;
+            return this;
+        }
+
         public Builder OnlyNonHidden(bool value)
         {
             _onlyNonHidden = value;
@@ -48,7 +55,7 @@ public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, bool Only
 
         public NoteDtoQuery Build()
         {
-            return new NoteDtoQuery(_ids.ToArray(), _namespaceIds.ToArray(), _onlyNonHidden);
+            return new NoteDtoQuery(_ids.ToArray(), _namespaceIds.ToArray(), _content, _onlyNonHidden);
         }
     }
 }

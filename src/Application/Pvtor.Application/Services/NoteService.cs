@@ -139,6 +139,7 @@ internal sealed class NoteService : INoteService
                 .WithIds(noteIds)
                 .WithNoteNamespaceIds(namespaceIds)
                 .WithUseNullNamespace(useNullNamespace)
+                .WithContent(query.Content)
                 .WithOnlyNonHidden(query.OnlyNonHidden));
 
         return (await _context.NoteRepository.QueryAsync(
