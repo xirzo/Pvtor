@@ -4,7 +4,7 @@ namespace Pvtor.Application.Contracts.Notes.Operations;
 
 public static class UpdateNote
 {
-    public readonly record struct Request(long NoteId, string Content);
+    public readonly record struct Request(long NoteId, string? Content = null, string? Name = null);
 
     public abstract record Response
     {

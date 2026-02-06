@@ -45,7 +45,7 @@ public class EditCommand : ICommand
         foreach (NoteCorrelationDto correlation in correlations)
         {
             UpdateNote.Response updateResponse = await context.NoteService.UpdateNoteAsync(
-                new UpdateNote.Request(correlation.NoteId, _content),
+                new UpdateNote.Request(correlation.NoteId, Content: _content),
                 cancellationToken);
 
             if (updateResponse is UpdateNote.Response.PersistenceFailure failure)

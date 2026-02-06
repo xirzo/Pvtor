@@ -64,18 +64,30 @@ internal sealed class NoteService : INoteService
         UpdateNote.Request request,
         CancellationToken cancellationToken = default)
     {
-        Note? note = (await _context.NoteRepository.QueryAsync(
+        Note? existingNote = (await _context.NoteRepository.QueryAsync(
             NoteQuery.Build(builder =>
                 builder.WithId(new NoteId(request.NoteId))),
             cancellationToken)).SingleOrDefault();
 
-        if (note is null)
+        if (existingNote is null)
         {
             return new UpdateNote.Response.NotFound($"Note with id: {request.NoteId} is not found");
         }
 
+        Note note = existingNote with { UpdateDate = DateTime.UtcNow };
+
+        if (request.Content is { } content)
+        {
+            note = note with { Content = content };
+        }
+
+        if (request.Name is { } name)
+        {
+            note = note with { Name = name };
+        }
+
         Note updatedNote =
-            await _context.NoteRepository.UpdateAsync(note with { Content = request.Content }, cancellationToken);
+            await _context.NoteRepository.UpdateAsync(note, cancellationToken);
 
         NoteDto noteDto = updatedNote.MapToDto();
 

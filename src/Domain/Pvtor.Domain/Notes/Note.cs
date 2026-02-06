@@ -25,13 +25,13 @@ public sealed record Note
 
     public NoteId NoteId { get; }
 
-    public string? Name { get; }
+    public string? Name { get; init; }
 
     public string Content { get; init; }
 
     public DateTime CreationDate { get; }
 
-    public DateTime UpdateDate { get; }
+    public DateTime UpdateDate { get; init; }
 
     public NoteNamespaceId? NoteNamespaceId { get; }
 

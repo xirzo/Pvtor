@@ -38,6 +38,24 @@ public class NoteController : ControllerBase
         };
     }
 
+    [HttpPatch("{noteId}")]
+    public async Task<ActionResult<NoteDto>> UpdateNoteAsync(
+        long noteId,
+        [FromBody] UpdateNoteRequest httpRequest,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new UpdateNote.Request(noteId, httpRequest.Content, httpRequest.Name);
+        UpdateNote.Response response = await _noteService.UpdateNoteAsync(request, cancellationToken);
+
+        return response switch
+        {
+            UpdateNote.Response.NotFound notFound => NotFound(notFound.Message),
+            UpdateNote.Response.PersistenceFailure persistenceFailure => BadRequest(persistenceFailure.Message),
+            UpdateNote.Response.Success success => Ok(success.Note),
+            _ => throw new UnreachableException(),
+        };
+    }
+
     [HttpGet]
     public async Task<ActionResult<NoteDto>> QueryNotesAsync(
         [FromQuery] QueryNotesParameters? parameters,
