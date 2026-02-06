@@ -157,10 +157,14 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
 
         command.CommandText = """
                               UPDATE notes 
-                              SET content = @content, update_date = @update_date, note_namespace_id = @note_namespace_id, is_hidden = @is_hidden
+                              SET name = @name, content = @content, update_date = @update_date, note_namespace_id = @note_namespace_id, is_hidden = @is_hidden
                               WHERE note_id = @note_id;
                               """;
+        object noteName = note.Name is null
+                ? DBNull.Value
+                : note.Name;
 
+        command.Parameters.AddWithValue("@name", noteName);
         command.Parameters.AddWithValue("@content", note.Content);
         command.Parameters.AddWithValue("@update_date", note.UpdateDate);
 
