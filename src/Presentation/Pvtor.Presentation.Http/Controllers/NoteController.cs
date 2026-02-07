@@ -69,6 +69,7 @@ public class NoteController : ControllerBase
                     .WithIds(safeParameters.NoteIds)
                     .WithNamespaceIds(safeParameters.NamespaceIds)
                     .OnlyNonHidden(safeParameters.OnlyNonHidden)
+                    .WithSortOrder(safeParameters.SortOrder)
                     .WithContent(safeParameters.Content)),
             cancellationToken);
 

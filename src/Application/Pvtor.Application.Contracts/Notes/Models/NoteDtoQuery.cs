@@ -3,7 +3,12 @@ using System.Collections.Generic;
 
 namespace Pvtor.Application.Contracts.Notes.Models;
 
-public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, string Content, bool OnlyNonHidden)
+public sealed record NoteDtoQuery(
+    long[] NoteIds,
+    long[] NamespaceIds,
+    string Content,
+    string? SortOrder,
+    bool OnlyNonHidden)
 {
     public static NoteDtoQuery Build(Func<Builder, Builder> action)
     {
@@ -16,6 +21,7 @@ public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, string Co
         private readonly List<long> _namespaceIds = [];
         private bool _onlyNonHidden = true;
         private string _content = string.Empty;
+        private string? _sortOrder;
 
         public Builder WithId(long id)
         {
@@ -53,9 +59,15 @@ public sealed record NoteDtoQuery(long[] NoteIds, long[] NamespaceIds, string Co
             return this;
         }
 
+        public Builder WithSortOrder(string? sortOrder)
+        {
+            _sortOrder = sortOrder;
+            return this;
+        }
+
         public NoteDtoQuery Build()
         {
-            return new NoteDtoQuery(_ids.ToArray(), _namespaceIds.ToArray(), _content, _onlyNonHidden);
+            return new NoteDtoQuery(_ids.ToArray(), _namespaceIds.ToArray(), _content, _sortOrder, _onlyNonHidden);
         }
     }
 }

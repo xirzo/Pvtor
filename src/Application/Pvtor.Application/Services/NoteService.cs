@@ -146,12 +146,15 @@ internal sealed class NoteService : INoteService
             .Select(id => new NoteNamespaceId(id))
             .ToArray();
 
+        string sortOrder = query.SortOrder ?? "update_date";
+
         var noteQuery = NoteQuery.Build(builder =>
             builder
                 .WithIds(noteIds)
                 .WithNoteNamespaceIds(namespaceIds)
                 .WithUseNullNamespace(useNullNamespace)
                 .WithContent(query.Content)
+                .WithSortOrder(sortOrder)
                 .WithOnlyNonHidden(query.OnlyNonHidden));
 
         return (await _context.NoteRepository.QueryAsync(

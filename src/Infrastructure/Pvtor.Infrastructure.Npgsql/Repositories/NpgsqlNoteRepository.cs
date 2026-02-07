@@ -131,6 +131,11 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
             commandText.Append(string.Join(" AND ", whereConditions));
         }
 
+        if (!string.IsNullOrWhiteSpace(query.SortOrder))
+        {
+            commandText.Append($" ORDER BY {query.SortOrder} DESC");
+        }
+
         await using NpgsqlCommand command = connection.CreateCommand();
 #pragma warning disable CA2100
         command.CommandText = commandText.ToString();
@@ -161,8 +166,8 @@ internal sealed class NpgsqlNoteRepository : INoteRepository
                               WHERE note_id = @note_id;
                               """;
         object noteName = note.Name is null
-                ? DBNull.Value
-                : note.Name;
+            ? DBNull.Value
+            : note.Name;
 
         command.Parameters.AddWithValue("@name", noteName);
         command.Parameters.AddWithValue("@content", note.Content);

@@ -9,7 +9,9 @@ public class QueryNotesParameters
     /// </summary>
     public long[] NamespaceIds { get; set; } = [];
 
-    public bool OnlyNonHidden { get; set; }
+    public bool OnlyNonHidden { get; set; } = true;
 
     public string Content { get; set; } = string.Empty;
+
+    public string? SortOrder { get; set; }
 }

@@ -11,5 +11,8 @@ public sealed partial record NoteQuery(
     NoteNamespaceId[] NoteNamespaceIds,
     NoteChannelId[] NoteChannelIds,
     string Content,
+
+    // TODO: maybe replace with array of strings
+    string SortOrder,
     bool UseNullNamespace,
     bool OnlyNonHidden);
