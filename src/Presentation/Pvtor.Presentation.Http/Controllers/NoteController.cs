@@ -38,24 +38,6 @@ public class NoteController : ControllerBase
         };
     }
 
-    [HttpPatch("{noteId}")]
-    public async Task<ActionResult<NoteDto>> UpdateNoteAsync(
-        long noteId,
-        [FromBody] UpdateNoteRequest httpRequest,
-        CancellationToken cancellationToken = default)
-    {
-        var request = new UpdateNote.Request(noteId, httpRequest.Content, httpRequest.Name);
-        UpdateNote.Response response = await _noteService.UpdateNoteAsync(request, cancellationToken);
-
-        return response switch
-        {
-            UpdateNote.Response.NotFound notFound => NotFound(notFound.Message),
-            UpdateNote.Response.PersistenceFailure persistenceFailure => BadRequest(persistenceFailure.Message),
-            UpdateNote.Response.Success success => Ok(success.Note),
-            _ => throw new UnreachableException(),
-        };
-    }
-
     [HttpGet]
     public async Task<ActionResult<NoteDto>> QueryNotesAsync(
         [FromQuery] QueryNotesParameters? parameters,
@@ -74,5 +56,37 @@ public class NoteController : ControllerBase
             cancellationToken);
 
         return Ok(response);
+    }
+
+    [HttpPatch("{noteId}")]
+    public async Task<ActionResult<NoteDto>> UpdateNoteAsync(
+        long noteId,
+        [FromBody] UpdateNoteRequest httpRequest,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new UpdateNote.Request(noteId, httpRequest.Content, httpRequest.Name);
+        UpdateNote.Response response = await _noteService.UpdateNoteAsync(request, cancellationToken);
+
+        return response switch
+        {
+            UpdateNote.Response.NotFound notFound => NotFound(notFound.Message),
+            UpdateNote.Response.PersistenceFailure persistenceFailure => BadRequest(persistenceFailure.Message),
+            UpdateNote.Response.Success success => Ok(success.Note),
+            _ => throw new UnreachableException(),
+        };
+    }
+
+    [HttpDelete("{noteId}")]
+    public async Task<ActionResult<NoteDto>> DeleteNoteAsync(long noteId, CancellationToken cancellationToken = default)
+    {
+        var request = new DeleteNote.Request(noteId);
+        DeleteNote.Response response = await _noteService.DeleteNoteAsync(request, cancellationToken);
+
+        return response switch
+        {
+            DeleteNote.Response.PersistenceFailure persistenceFailure => BadRequest(persistenceFailure.Message),
+            DeleteNote.Response.Success => Ok(),
+            _ => throw new UnreachableException(),
+        };
     }
 }

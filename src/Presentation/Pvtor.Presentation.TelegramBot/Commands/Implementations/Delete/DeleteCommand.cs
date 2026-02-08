@@ -73,7 +73,7 @@ public class DeleteCommand : ICommand
         }
 
         DeleteNote.Response noteResponse =
-            await context.NoteService.DeleteAsync(noteId, cancellationToken);
+            await context.NoteService.DeleteNoteAsync(new DeleteNote.Request(noteId), cancellationToken);
 
         switch (noteResponse)
         {

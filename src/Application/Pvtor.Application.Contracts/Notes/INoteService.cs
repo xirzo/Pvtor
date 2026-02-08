@@ -27,5 +27,7 @@ public interface INoteService
     // TODO: replace with query
     Task<IEnumerable<NoteDto>> GetNonHiddenByNamespaceId(long? channelNoteNamespaceId);
 
-    Task<DeleteNote.Response> DeleteAsync(long noteId, CancellationToken cancellationToken = default);
+    Task<DeleteNote.Response> DeleteNoteAsync(
+        DeleteNote.Request request,
+        CancellationToken cancellationToken = default);
 }
